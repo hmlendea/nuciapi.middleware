@@ -13,6 +13,11 @@ namespace NuciAPI.Middleware
             return services;
         }
 
+        public static IApplicationBuilder UseNuciApiExceptionHandling(
+            this IApplicationBuilder app)
+            => app.UseMiddleware<NuciApiExceptionHandlingMiddleware>();
+
+
         public static IApplicationBuilder UseNuciApiHeaderValidation(
             this IApplicationBuilder app)
             => app.UseMiddleware<NuciApiHeaderValidationMiddleware>();
