@@ -36,6 +36,13 @@ namespace NuciAPI.Middleware
                     HttpStatusCode.Forbidden,
                     new NuciApiErrorResponse(ex));
             }
+            catch (BadHttpRequestException ex)
+            {
+                await WriteResponseAsync(
+                    context,
+                    HttpStatusCode.BadRequest,
+                    new NuciApiErrorResponse(ex));
+            }
             catch (KeyNotFoundException)
             {
                 await WriteResponseAsync(

@@ -17,7 +17,6 @@ namespace NuciAPI.Middleware
             this IApplicationBuilder app)
             => app.UseMiddleware<NuciApiExceptionHandlingMiddleware>();
 
-
         public static IApplicationBuilder UseNuciApiHeaderValidation(
             this IApplicationBuilder app)
             => app.UseMiddleware<NuciApiHeaderValidationMiddleware>();
