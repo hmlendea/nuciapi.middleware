@@ -16,19 +16,15 @@ namespace NuciAPI.Middleware
         {
             string clientId = GetHeaderValue(context, NuciApiHeaderNames.ClientId);
             string requestId = GetHeaderValue(context, NuciApiHeaderNames.RequestId);
-            string timestampRaw = GetHeaderValue(context, NuciApiHeaderNames.Timestamp);
-
-            if (!DateTimeOffset.TryParse(timestampRaw, out DateTimeOffset timestamp))
-            {
-                throw new UnauthorizedAccessException("Invalid request timestamp.");
-            }
+            DateTimeOffset timestamp = DateTimeOffset.Parse(GetHeaderValue(context, NuciApiHeaderNames.Timestamp));
 
             TimeSpan allowedSkew = TimeSpan.FromMinutes(5);
             TimeSpan difference = DateTimeOffset.UtcNow - timestamp;
 
             if (difference > allowedSkew || difference < -allowedSkew)
             {
-                throw new UnauthorizedAccessException("Invalid request timestamp.");
+                throw new BadHttpRequestException(
+                    $"This request has expired and is not acceptable anymore.");
             }
 
             string cacheKey = $"nonce:{clientId}:{requestId}:{context.Request.Path}";
@@ -45,7 +41,7 @@ namespace NuciAPI.Middleware
 
             if (alreadyExists)
             {
-                throw new UnauthorizedAccessException("This request has already been processed.");
+                throw new RequestAlreadyProcessedException(requestId);
             }
 
             await Next(context);
