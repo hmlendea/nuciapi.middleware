@@ -1,5 +1,4 @@
 using System;
-using System.Security;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
@@ -19,14 +18,17 @@ namespace NuciAPI.Middleware
             string requestId = GetHeaderValue(context, NuciApiHeaderNames.RequestId);
             string timestampRaw = GetHeaderValue(context, NuciApiHeaderNames.Timestamp);
 
-            DateTimeOffset timestamp = DateTimeOffset.Parse(timestampRaw);
+            if (!DateTimeOffset.TryParse(timestampRaw, out DateTimeOffset timestamp))
+            {
+                throw new UnauthorizedAccessException("Invalid request timestamp.");
+            }
 
             TimeSpan allowedSkew = TimeSpan.FromMinutes(5);
             TimeSpan difference = DateTimeOffset.UtcNow - timestamp;
 
             if (difference > allowedSkew || difference < -allowedSkew)
             {
-                throw new SecurityException("Invalid request timestamp.");
+                throw new UnauthorizedAccessException("Invalid request timestamp.");
             }
 
             string cacheKey = $"nonce:{clientId}:{requestId}:{context.Request.Path}";
@@ -43,7 +45,7 @@ namespace NuciAPI.Middleware
 
             if (alreadyExists)
             {
-                throw new SecurityException("This request has already been processed.");
+                throw new UnauthorizedAccessException("This request has already been processed.");
             }
 
             await Next(context);

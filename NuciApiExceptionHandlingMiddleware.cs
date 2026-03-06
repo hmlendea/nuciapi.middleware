@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -19,69 +18,69 @@ namespace NuciAPI.Middleware
             {
                 await Next(context);
             }
-            catch (Exception ex) when (
-                ex is SecurityException ||
-                ex is UnauthorizedAccessException
+            catch (Exception exception) when (
+                exception is AuthenticationException ||
+                exception is UnauthorizedAccessException
             )
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.Unauthorized,
-                    new NuciApiErrorResponse(ex));
+                    NuciApiErrorResponse.Unauthorised);
             }
-            catch (AuthenticationException ex)
+            catch (AuthenticationException exception)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.Forbidden,
-                    new NuciApiErrorResponse(ex));
+                    new NuciApiErrorResponse(exception));
             }
-            catch (BadHttpRequestException ex)
+            catch (BadHttpRequestException exception)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.BadRequest,
-                    new NuciApiErrorResponse(ex));
+                    new NuciApiErrorResponse(exception));
             }
             catch (KeyNotFoundException)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.NotFound,
                     NuciApiErrorResponse.NotFound);
             }
             catch (DuplicateEntityException)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.Conflict,
                     NuciApiErrorResponse.AlreadyExists);
             }
             catch (TimeoutException)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.GatewayTimeout,
-                    new NuciApiErrorResponse("The request has timed out."));
+                    NuciApiErrorResponse.Timeout);
             }
-            catch (NotImplementedException ex)
+            catch (NotImplementedException exception)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.NotImplemented,
                     new NuciApiErrorResponse(
-                        ex.Message ?? "This endpoint has not been implemented."));
+                        exception.Message ?? "This endpoint has not been implemented."));
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                await WriteResponseAsync(
+                await WriteErrorResponseAsync(
                     context,
-                    HttpStatusCode.BadRequest,
-                    new NuciApiErrorResponse(ex));
+                    HttpStatusCode.InternalServerError,
+                    new NuciApiErrorResponse(exception));
             }
         }
 
-        private async Task WriteResponseAsync(
+        private async Task WriteErrorResponseAsync(
             HttpContext context,
             HttpStatusCode statusCode,
             NuciApiErrorResponse errorResponse)
