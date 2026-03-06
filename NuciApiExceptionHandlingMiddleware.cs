@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Security.Authentication;
 using System.Threading.Tasks;
@@ -42,19 +41,26 @@ namespace NuciAPI.Middleware
                     HttpStatusCode.BadRequest,
                     new NuciApiErrorResponse(exception));
             }
-            catch (KeyNotFoundException)
+            catch (EntityNotFoundException)
             {
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.NotFound,
                     NuciApiErrorResponse.NotFound);
             }
-            catch (DuplicateEntityException)
+            catch (EntityAlreadyExistsException)
             {
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.Conflict,
                     NuciApiErrorResponse.AlreadyExists);
+            }
+            catch (RequestAlreadyProcessedException exception)
+            {
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.Conflict,
+                    new NuciApiErrorResponse(exception));
             }
             catch (TimeoutException)
             {
