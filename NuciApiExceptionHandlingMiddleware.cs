@@ -1,5 +1,8 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Net.Http;
+using System.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -18,28 +21,40 @@ namespace NuciAPI.Middleware
                 await Next(context);
             }
             catch (Exception exception) when (
-                exception is AuthenticationException ||
-                exception is UnauthorizedAccessException
-            )
-            {
-                await WriteErrorResponseAsync(
-                    context,
-                    HttpStatusCode.Unauthorized,
-                    NuciApiErrorResponse.Unauthorised);
-            }
-            catch (AuthenticationException exception)
-            {
-                await WriteErrorResponseAsync(
-                    context,
-                    HttpStatusCode.Forbidden,
-                    new NuciApiErrorResponse(exception));
-            }
-            catch (BadHttpRequestException exception)
+                exception is BadHttpRequestException ||
+                exception is FormatException ||
+                exception is ArgumentException ||
+                exception is ValidationException)
             {
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.BadRequest,
                     new NuciApiErrorResponse(exception));
+            }
+            catch (Exception exception) when (
+                exception is SecurityException ||
+                exception is UnauthorizedAccessException)
+            {
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.Forbidden,
+                    NuciApiErrorResponse.Unauthorised);
+            }
+            catch (Exception exception) when (
+                exception is HttpRequestException ||
+                exception is TimeoutException)
+            {
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.ServiceUnavailable,
+                    NuciApiErrorResponse.ServiceDependencyUnavailable);
+            }
+            catch (AuthenticationException)
+            {
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.Unauthorized,
+                    NuciApiErrorResponse.AuthenticationFailure);
             }
             catch (EntityNotFoundException)
             {
@@ -62,13 +77,6 @@ namespace NuciAPI.Middleware
                     HttpStatusCode.Conflict,
                     new NuciApiErrorResponse(exception));
             }
-            catch (TimeoutException)
-            {
-                await WriteErrorResponseAsync(
-                    context,
-                    HttpStatusCode.GatewayTimeout,
-                    NuciApiErrorResponse.Timeout);
-            }
             catch (NotImplementedException exception)
             {
                 await WriteErrorResponseAsync(
@@ -76,6 +84,13 @@ namespace NuciAPI.Middleware
                     HttpStatusCode.NotImplemented,
                     new NuciApiErrorResponse(
                         exception.Message ?? "This endpoint has not been implemented."));
+            }
+            catch (OperationCanceledException)
+            {
+                await WriteErrorResponseAsync(
+                    context,
+                    StatusCodes.Status499ClientClosedRequest,
+                    NuciApiErrorResponse.ClientClosedTheRequest);
             }
             catch (Exception exception)
             {
@@ -90,8 +105,14 @@ namespace NuciAPI.Middleware
             HttpContext context,
             HttpStatusCode statusCode,
             NuciApiErrorResponse errorResponse)
+            => await WriteErrorResponseAsync(context, (int)statusCode, errorResponse);
+
+        private async Task WriteErrorResponseAsync(
+            HttpContext context,
+            int statusCode,
+            NuciApiErrorResponse errorResponse)
         {
-            context.Response.StatusCode = (int)statusCode;
+            context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json";
 
             await context.Response.WriteAsJsonAsync(errorResponse);
