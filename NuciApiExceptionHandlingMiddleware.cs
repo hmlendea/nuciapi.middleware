@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Http;
@@ -29,7 +30,7 @@ namespace NuciAPI.Middleware
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.BadRequest,
-                    new NuciApiErrorResponse(exception));
+                    new NuciApiErrorResponse(exception.Message, "BAD_REQUEST"));
             }
             catch (Exception exception) when (
                 exception is SecurityException ||
@@ -42,6 +43,7 @@ namespace NuciAPI.Middleware
             }
             catch (Exception exception) when (
                 exception is HttpRequestException ||
+                exception is TaskCanceledException ||
                 exception is TimeoutException)
             {
                 await WriteErrorResponseAsync(
@@ -56,14 +58,18 @@ namespace NuciAPI.Middleware
                     HttpStatusCode.Unauthorized,
                     NuciApiErrorResponse.AuthenticationFailure);
             }
-            catch (EntityNotFoundException)
+            catch (Exception exception) when (
+                exception is EntityNotFoundException ||
+                exception is KeyNotFoundException)
             {
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.NotFound,
                     NuciApiErrorResponse.NotFound);
             }
-            catch (EntityAlreadyExistsException)
+            catch (Exception exception) when (
+                exception is EntityNotFoundException ||
+                exception is RequestAlreadyProcessedException)
             {
                 await WriteErrorResponseAsync(
                     context,
@@ -75,7 +81,7 @@ namespace NuciAPI.Middleware
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.Conflict,
-                    new NuciApiErrorResponse(exception));
+                    new NuciApiErrorResponse(exception.Message, "REQUEST_ALREADY_PROCESSED"));
             }
             catch (NotImplementedException exception)
             {
@@ -83,7 +89,8 @@ namespace NuciAPI.Middleware
                     context,
                     HttpStatusCode.NotImplemented,
                     new NuciApiErrorResponse(
-                        exception.Message ?? "This endpoint has not been implemented."));
+                        exception.Message ?? "This endpoint has not been implemented.",
+                        "NOT_IMPLEMENTED"));
             }
             catch (OperationCanceledException)
             {
@@ -92,12 +99,12 @@ namespace NuciAPI.Middleware
                     StatusCodes.Status499ClientClosedRequest,
                     NuciApiErrorResponse.ClientClosedTheRequest);
             }
-            catch (Exception exception)
+            catch
             {
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.InternalServerError,
-                    new NuciApiErrorResponse(exception));
+                    NuciApiErrorResponse.InternalServerError);
             }
         }
 
