@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Http;
@@ -42,6 +43,7 @@ namespace NuciAPI.Middleware
             }
             catch (Exception exception) when (
                 exception is HttpRequestException ||
+                exception is TaskCanceledException ||
                 exception is TimeoutException)
             {
                 await WriteErrorResponseAsync(
@@ -56,14 +58,18 @@ namespace NuciAPI.Middleware
                     HttpStatusCode.Unauthorized,
                     NuciApiErrorResponse.AuthenticationFailure);
             }
-            catch (EntityNotFoundException)
+            catch (Exception exception) when (
+                exception is EntityNotFoundException ||
+                exception is KeyNotFoundException)
             {
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.NotFound,
                     NuciApiErrorResponse.NotFound);
             }
-            catch (EntityAlreadyExistsException)
+            catch (Exception exception) when (
+                exception is EntityNotFoundException ||
+                exception is RequestAlreadyProcessedException)
             {
                 await WriteErrorResponseAsync(
                     context,
