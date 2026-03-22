@@ -97,7 +97,7 @@ namespace NuciAPI.Middleware
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.InternalServerError,
-                    new NuciApiErrorResponse(exception));
+                    NuciApiErrorResponse.InternalServerError);
             }
         }
 
