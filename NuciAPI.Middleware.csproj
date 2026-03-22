@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuciAPI" Version="3.2.0" />
+    <PackageReference Include="NuciAPI" Version="3.3.0" />
     <PackageReference Include="NuciDAL" Version="2.5.0" />
   </ItemGroup>
 
