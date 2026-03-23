@@ -15,14 +15,14 @@ namespace NuciAPI.Middleware
 
         public static IApplicationBuilder UseNuciApiExceptionHandling(
             this IApplicationBuilder app)
-            => app.UseMiddleware<NuciApiExceptionHandlingMiddleware>();
+            => app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         public static IApplicationBuilder UseNuciApiHeaderValidation(
             this IApplicationBuilder app)
-            => app.UseMiddleware<NuciApiHeaderValidationMiddleware>();
+            => app.UseMiddleware<HeaderValidationMiddleware>();
 
         public static IApplicationBuilder UseNuciApiReplayProtection(
             this IApplicationBuilder app)
-            => app.UseMiddleware<NuciApiReplayProtectionMiddleware>();
+            => app.UseMiddleware<ReplayProtectionMiddleware>();
     }
 }
