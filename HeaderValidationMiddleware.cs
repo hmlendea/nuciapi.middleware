@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace NuciAPI.Middleware
 {
-    public sealed class HeaderValidationMiddleware(
+    internal sealed class HeaderValidationMiddleware(
         RequestDelegate next)
         : NuciApiMiddleware(next)
     {
