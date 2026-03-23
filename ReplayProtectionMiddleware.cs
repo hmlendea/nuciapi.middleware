@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace NuciAPI.Middleware
 {
-    public sealed class NuciApiReplayProtectionMiddleware(
+    public sealed class ReplayProtectionMiddleware(
         RequestDelegate next,
         IMemoryCache memoryCache)
         : NuciApiMiddleware(next)

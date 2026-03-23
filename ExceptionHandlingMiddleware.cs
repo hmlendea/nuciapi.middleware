@@ -12,7 +12,7 @@ using NuciDAL.Repositories;
 
 namespace NuciAPI.Middleware
 {
-    public sealed class NuciApiExceptionHandlingMiddleware(
+    public sealed class ExceptionHandlingMiddleware(
         RequestDelegate next) : NuciApiMiddleware(next)
     {
         public override async Task InvokeAsync(HttpContext context)
