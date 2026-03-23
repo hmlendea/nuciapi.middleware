@@ -3,11 +3,9 @@ using System;
 namespace NuciAPI.Middleware
 {
     /// <summary>
-    /// Repository exception.
+    /// Exception thrown when a request with the same client ID, request ID and path has already been processed within the allowed time window.
     /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="RequestAlreadyProcessedException"/> exception.
-    /// </remarks>
+    /// <param name="requestId">The identifier of the request that has already been processed.</param>
     public class RequestAlreadyProcessedException(string requestId)
         : Exception($"Request '{requestId}' has already been processed.")
     {
