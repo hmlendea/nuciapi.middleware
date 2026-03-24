@@ -25,6 +25,15 @@ namespace NuciAPI.Middleware
         }
 
         protected string TryGetHeaderValue(HttpContext context, string headerName)
-            => context.Request.Headers[headerName].FirstOrDefault();
+        {
+            string rawValue = context.Request.Headers[headerName].FirstOrDefault();
+
+            if (rawValue is null)
+            {
+                return null;
+            }
+
+            return Uri.UnescapeDataString(rawValue);
+        }
     }
 }
