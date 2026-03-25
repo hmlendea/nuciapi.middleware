@@ -30,7 +30,9 @@ namespace NuciAPI.Middleware
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.BadRequest,
-                    new NuciApiErrorResponse(exception.Message, "BAD_REQUEST"));
+                    new NuciApiErrorResponse(
+                        exception.Message,
+                        NuciApiResponseCodes.ErrorCodes.BadRequest));
             }
             catch (Exception exception) when (
                 exception is SecurityException ||
@@ -81,7 +83,9 @@ namespace NuciAPI.Middleware
                 await WriteErrorResponseAsync(
                     context,
                     HttpStatusCode.Conflict,
-                    new NuciApiErrorResponse(exception.Message, "REQUEST_ALREADY_PROCESSED"));
+                    new NuciApiErrorResponse(
+                        exception.Message,
+                        NuciApiResponseCodes.ErrorCodes.AlreadyProcessed));
             }
             catch (NotImplementedException exception)
             {
@@ -89,8 +93,8 @@ namespace NuciAPI.Middleware
                     context,
                     HttpStatusCode.NotImplemented,
                     new NuciApiErrorResponse(
-                        exception.Message ?? "This endpoint has not been implemented.",
-                        "NOT_IMPLEMENTED"));
+                        exception.Message ?? NuciApiResponseMessages.ErrorMessages.NotImplemented,
+                        NuciApiResponseCodes.ErrorCodes.NotImplemented));
             }
             catch (OperationCanceledException)
             {
