@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace NuciAPI.Middleware
+namespace NuciAPI.Middleware.Security
 {
     internal sealed class HeaderValidationMiddleware(
         RequestDelegate next)
