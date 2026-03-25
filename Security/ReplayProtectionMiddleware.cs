@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace NuciAPI.Middleware
+namespace NuciAPI.Middleware.Security
 {
     internal sealed class ReplayProtectionMiddleware(
         RequestDelegate next,

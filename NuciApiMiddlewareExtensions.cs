@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using NuciAPI.Middleware.ExceptionHandling;
 using NuciAPI.Middleware.Logging;
+using NuciAPI.Middleware.Security;
 
 namespace NuciAPI.Middleware
 {
