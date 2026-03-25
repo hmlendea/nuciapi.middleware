@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 using NuciAPI.Responses;
 using NuciDAL.Repositories;
 
-namespace NuciAPI.Middleware
+namespace NuciAPI.Middleware.ExceptionHandling
 {
     internal sealed class ExceptionHandlingMiddleware(
         RequestDelegate next) : NuciApiMiddleware(next)

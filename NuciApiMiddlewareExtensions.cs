@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+
+using NuciAPI.Middleware.ExceptionHandling;
 using NuciAPI.Middleware.Logging;
 
 namespace NuciAPI.Middleware
