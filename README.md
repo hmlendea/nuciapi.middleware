@@ -13,3 +13,14 @@ dotnet add package NuciAPI.Middleware
 ```powershell
 Install-Package NuciAPI.Middleware
 ```
+
+# Usage
+
+```csharp
+builder.Services.AddNuciApiScannerProtection();
+
+app.UseNuciApiExceptionHandling();
+app.UseNuciApiScannerProtection();
+```
+
+`UseNuciApiScannerProtection()` blocks requests for resources commonly targeted by scanners, and bans the caller IP address in the in-memory cache for 10 hours so that any subsequent requests from the same address are denied as well.
