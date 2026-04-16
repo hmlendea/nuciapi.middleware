@@ -59,7 +59,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (ShouldBanRequest(context.Request.Path))
+            if (ShouldBanRequest(context.Request.Method, context.Request.Path))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -74,13 +74,19 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private static bool ShouldBanRequest(PathString requestPath)
+        private static bool ShouldBanRequest(string requestMethod, PathString requestPath)
         {
             string path = requestPath.ToString();
 
             if (string.IsNullOrWhiteSpace(path))
             {
                 return false;
+            }
+
+            if (path == "/" &&
+                string.Equals(requestMethod, "PROPFIND", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
             }
 
             foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
