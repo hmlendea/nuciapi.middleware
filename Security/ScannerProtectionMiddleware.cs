@@ -13,6 +13,8 @@ namespace NuciAPI.Middleware.Security
     {
         private static readonly TimeSpan BanDuration = TimeSpan.FromHours(10);
 
+        private static readonly string[] SafeVerbs = ["POST", "GET", "PUT", "DELETE", "PATCH"];
+
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
             CreateExactPathRegex("/.DS_Store"),
@@ -92,10 +94,12 @@ namespace NuciAPI.Middleware.Security
                 return false;
             }
 
-            if (path == "/" &&
-                string.Equals(requestMethod, "PROPFIND", StringComparison.OrdinalIgnoreCase))
+            if (path == "/")
             {
-                return true;
+                if (!SafeVerbs.Contains(requestMethod, StringComparer.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
             }
 
             foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
