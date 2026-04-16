@@ -16,6 +16,7 @@ namespace NuciAPI.Middleware.Security
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
             CreateExactPathRegex("/.DS_Store"),
+            CreateExactPathRegex("/.env"),
             CreateExactPathRegex("/.vscode/sftp.json"),
             CreateExactPathRegex("/.well-known/security.txt"),
             CreateExactPathRegex("/@vite/env"),
@@ -30,6 +31,14 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application"),
             CreateExactPathRegex("/graphql/api"),
             CreateExactPathRegex("/info.php"),
+            CreateExactPathRegex("/js/lkk_ch.js"),
+            CreateExactPathRegex("/js/twint_ch.js"),
+            CreateExactPathRegex("/lander/pkn-orlen-lend/"),
+            CreateExactPathRegex("/lander/pl_4/index.html"),
+            CreateExactPathRegex("/lander/pl---immediate-bitwave-2/"),
+            CreateExactPathRegex("/lander/pl---interpol0/"),
+            CreateExactPathRegex("/lander/pl-orlen/"),
+            CreateExactPathRegex("/lander/polskagoldai/index.html"),
             CreateExactPathRegex("/login.action"),
             CreateExactPathRegex("/mcp"),
             CreateExactPathRegex("/robots.txt"),
