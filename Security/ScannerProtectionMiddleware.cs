@@ -17,16 +17,20 @@ namespace NuciAPI.Middleware.Security
 
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
+            CreateExactPathRegex("/_ignition/execute-solution"),
             CreateExactPathRegex("/.DS_Store"),
+            CreateExactPathRegex("/.env.production"),
             CreateExactPathRegex("/.env"),
             CreateExactPathRegex("/.vscode/sftp.json"),
             CreateExactPathRegex("/.well-known/security.txt"),
             CreateExactPathRegex("/@vite/env"),
             CreateExactPathRegex("/actuator/env"),
+            CreateExactPathRegex("/api/.env"),
             CreateExactPathRegex("/api/gql"),
             CreateExactPathRegex("/assets/js/auth.js"),
             CreateExactPathRegex("/assets/js/message.js"),
             CreateExactPathRegex("/assets/js/qr_modal.js"),
+            CreateExactPathRegex("/aws.env"),
             CreateExactPathRegex("/bot-connect.js"),
             CreateExactPathRegex("/config.json"),
             CreateExactPathRegex("/debug/default/view"),
