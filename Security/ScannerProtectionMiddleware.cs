@@ -13,9 +13,12 @@ namespace NuciAPI.Middleware.Security
     {
         private static readonly TimeSpan BanDuration = TimeSpan.FromHours(10);
 
+        private static readonly string[] SafeVerbs = ["POST", "GET", "PUT", "DELETE", "PATCH"];
+
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
             CreateExactPathRegex("/.DS_Store"),
+            CreateExactPathRegex("/.env"),
             CreateExactPathRegex("/.vscode/sftp.json"),
             CreateExactPathRegex("/.well-known/security.txt"),
             CreateExactPathRegex("/@vite/env"),
@@ -23,16 +26,27 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/api/gql"),
             CreateExactPathRegex("/assets/js/auth.js"),
             CreateExactPathRegex("/assets/js/message.js"),
+            CreateExactPathRegex("/assets/js/qr_modal.js"),
             CreateExactPathRegex("/bot-connect.js"),
             CreateExactPathRegex("/config.json"),
             CreateExactPathRegex("/debug/default/view"),
             CreateExactPathRegex("/ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application"),
             CreateExactPathRegex("/graphql/api"),
             CreateExactPathRegex("/info.php"),
+            CreateExactPathRegex("/js/lkk_ch.js"),
+            CreateExactPathRegex("/js/twint_ch.js"),
+            CreateExactPathRegex("/lander/pkn-orlen-lend/"),
+            CreateExactPathRegex("/lander/pl_4/index.html"),
+            CreateExactPathRegex("/lander/pl---immediate-bitwave-2/"),
+            CreateExactPathRegex("/lander/pl---interpol0/"),
+            CreateExactPathRegex("/lander/pl-orlen/"),
+            CreateExactPathRegex("/lander/polskagoldai/index.html"),
             CreateExactPathRegex("/login.action"),
+            CreateExactPathRegex("/mcp"),
             CreateExactPathRegex("/robots.txt"),
             CreateExactPathRegex("/security.txt"),
             CreateExactPathRegex("/sitemap.xml"),
+            CreateExactPathRegex("/sse"),
             CreateExactPathRegex("/static/style/protect/index.js"),
             CreateExactPathRegex("/static/style/sys_files/index.js"),
             CreateExactPathRegex("/telescope/requests"),
@@ -40,6 +54,12 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/v2/_catalog"),
             CreateRawRegex("^/\\.git/.*$"),
             CreateRawRegex("^/console(?:/.*)?$"),
+        ];
+
+        private static readonly Regex[] ForbiddenQueryPatterns =
+        [
+            CreateRawRegex("(?:^|&)XDEBUG_SESSION_START=phpstorm(?:&|$)"),
+            CreateRawRegex("(?:^|&)rest_route=/wp/v2/users/?(?:&|$)"),
         ];
 
         private readonly IMemoryCache memoryCache = memoryCache ??
@@ -56,7 +76,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (ShouldBanRequest(context.Request.Path))
+            if (ShouldBanRequest(context.Request))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -71,13 +91,22 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private static bool ShouldBanRequest(PathString requestPath)
+        private static bool ShouldBanRequest(HttpRequest request)
         {
-            string path = requestPath.ToString();
+            string path = request.Path.ToString();
+            string queryString = request.QueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))
             {
                 return false;
+            }
+
+            if (path == "/")
+            {
+                if (!SafeVerbs.Contains(request.Method, StringComparer.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
             }
 
             foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
@@ -85,6 +114,17 @@ namespace NuciAPI.Middleware.Security
                 if (forbiddenResourcePattern.IsMatch(path))
                 {
                     return true;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                foreach (Regex forbiddenQueryPattern in ForbiddenQueryPatterns)
+                {
+                    if (forbiddenQueryPattern.IsMatch(queryString))
+                    {
+                        return true;
+                    }
                 }
             }
 
