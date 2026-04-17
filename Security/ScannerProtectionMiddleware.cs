@@ -56,6 +56,12 @@ namespace NuciAPI.Middleware.Security
             CreateRawRegex("^/console(?:/.*)?$"),
         ];
 
+        private static readonly Regex[] ForbiddenQueryPatterns =
+        [
+            CreateRawRegex("(?:^|&)XDEBUG_SESSION_START=phpstorm(?:&|$)"),
+            CreateRawRegex("(?:^|&)rest_route=/wp/v2/users/?(?:&|$)"),
+        ];
+
         private readonly IMemoryCache memoryCache = memoryCache ??
             throw new ArgumentNullException(nameof(memoryCache));
 
@@ -70,7 +76,10 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (ShouldBanRequest(context.Request.Method, context.Request.Path))
+            if (ShouldBanRequest(
+                context.Request.Method,
+                context.Request.Path,
+                context.Request.QueryString))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -85,9 +94,13 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private static bool ShouldBanRequest(string requestMethod, PathString requestPath)
+        private static bool ShouldBanRequest(
+            string requestMethod,
+            PathString requestPath,
+            QueryString requestQueryString)
         {
             string path = requestPath.ToString();
+            string queryString = requestQueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -107,6 +120,17 @@ namespace NuciAPI.Middleware.Security
                 if (forbiddenResourcePattern.IsMatch(path))
                 {
                     return true;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                foreach (Regex forbiddenQueryPattern in ForbiddenQueryPatterns)
+                {
+                    if (forbiddenQueryPattern.IsMatch(queryString))
+                    {
+                        return true;
+                    }
                 }
             }
 
