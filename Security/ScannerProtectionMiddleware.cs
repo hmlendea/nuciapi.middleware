@@ -17,6 +17,11 @@ namespace NuciAPI.Middleware.Security
 
         private static readonly string[] SafeVerbs = ["POST", "GET", "PUT", "DELETE", "PATCH"];
 
+        private static readonly string[] ForbiddenFromHeaders =
+        [
+            "oai-searchbot(at)openai.com",
+        ];
+
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
             CreateExactPathRegex("/_ignition/execute-solution"),
@@ -106,7 +111,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (await ShouldBanRequestAsync(context.Request))
+            if (await ShouldBanRequestAsync(context))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -121,14 +126,24 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private static async Task<bool> ShouldBanRequestAsync(HttpRequest request)
+        private async Task<bool> ShouldBanRequestAsync(HttpContext context)
         {
+            HttpRequest request = context.Request;
+
             string path = request.Path.ToString();
             string queryString = request.QueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))
             {
                 return false;
+            }
+
+            string fromHeader = TryGetHeaderValue(context, "From");
+
+            if (!string.IsNullOrWhiteSpace(fromHeader) &&
+                ForbiddenFromHeaders.Contains(fromHeader, StringComparer.OrdinalIgnoreCase))
+            {
+                return true;
             }
 
             if (path == "/")
