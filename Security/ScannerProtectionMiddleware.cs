@@ -81,6 +81,7 @@ namespace NuciAPI.Middleware.Security
             CreateRawRegex("^[a-z]\\.php$"),
             CreateRawRegex("^/\\.git/.*$"),
             CreateRawRegex("^/console(?:/.*)?$"),
+            CreateRawRegex("^/lander/.*$"),
         ];
 
         private static readonly Regex[] ForbiddenQueryPatterns =
