@@ -24,6 +24,7 @@ namespace NuciAPI.Middleware.Security
 
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
+            CreateExactPathRegex("/_environment"),
             CreateExactPathRegex("/_ignition/execute-solution"),
             CreateExactPathRegex("/.aws/credentials"),
             CreateExactPathRegex("/.DS_Store"),
@@ -71,6 +72,7 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/next"),
             CreateExactPathRegex("/owa/auth/logon.aspx"),
             CreateExactPathRegex("/owa/auth/x.js"),
+            CreateExactPathRegex("/profiler/_phpinfo"),
             CreateExactPathRegex("/r"),
             CreateExactPathRegex("/redirect-to"),
             CreateExactPathRegex("/redirect/"),
