@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -26,16 +28,21 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/.well-known/security.txt"),
             CreateExactPathRegex("/@vite/env"),
             CreateExactPathRegex("/actuator/env"),
+            CreateExactPathRegex("/actuator/health"),
             CreateExactPathRegex("/api/.env"),
             CreateExactPathRegex("/api/gql"),
+            CreateExactPathRegex("/app/"),
             CreateExactPathRegex("/assets/js/auth.js"),
             CreateExactPathRegex("/assets/js/message.js"),
             CreateExactPathRegex("/assets/js/qr_modal.js"),
+            CreateExactPathRegex("/autodiscover/autodiscover.json"),
             CreateExactPathRegex("/aws.env"),
             CreateExactPathRegex("/bot-connect.js"),
             CreateExactPathRegex("/config.json"),
+            CreateExactPathRegex("/config.php.bak"),
             CreateExactPathRegex("/currentsetting.htm"),
             CreateExactPathRegex("/debug/default/view"),
+            CreateExactPathRegex("/developmentserver/metadatauploader"),
             CreateExactPathRegex("/ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application"),
             CreateExactPathRegex("/geoserver/web/"),
             CreateExactPathRegex("/go"),
@@ -53,7 +60,9 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/login.action"),
             CreateExactPathRegex("/mcp"),
             CreateExactPathRegex("/next"),
+            CreateExactPathRegex("/owa/auth/logon.aspx"),
             CreateExactPathRegex("/owa/auth/x.js"),
+            CreateExactPathRegex("/public/.env"),
             CreateExactPathRegex("/r"),
             CreateExactPathRegex("/redirect-to"),
             CreateExactPathRegex("/redirect/"),
@@ -74,6 +83,7 @@ namespace NuciAPI.Middleware.Security
             CreateRawRegex("^[a-z]\\.php$"),
             CreateRawRegex("^/\\.git/.*$"),
             CreateRawRegex("^/console(?:/.*)?$"),
+            CreateRawRegex("^/lander/.*$"),
         ];
 
         private static readonly Regex[] ForbiddenQueryPatterns =
@@ -96,7 +106,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (ShouldBanRequest(context.Request))
+            if (await ShouldBanRequestAsync(context.Request))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -111,7 +121,7 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private static bool ShouldBanRequest(HttpRequest request)
+        private static async Task<bool> ShouldBanRequestAsync(HttpRequest request)
         {
             string path = request.Path.ToString();
             string queryString = request.QueryString.ToString().TrimStart('?');
@@ -124,6 +134,14 @@ namespace NuciAPI.Middleware.Security
             if (path == "/")
             {
                 if (!SafeVerbs.Contains(request.Method, StringComparer.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                string body = await ReadRequestBodyAsStringAsync(request);
+
+                if (string.IsNullOrWhiteSpace(queryString) &&
+                    string.IsNullOrWhiteSpace(body))
                 {
                     return true;
                 }
@@ -149,6 +167,34 @@ namespace NuciAPI.Middleware.Security
             }
 
             return false;
+        }
+
+        private static async Task<string> ReadRequestBodyAsStringAsync(HttpRequest request)
+        {
+            if (request.Body is null)
+            {
+                return null;
+            }
+
+            if (request.ContentLength == 0)
+            {
+                return null;
+            }
+
+            request.EnableBuffering();
+            request.Body.Position = 0;
+
+            using StreamReader reader = new(
+                request.Body,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true,
+                bufferSize: 1024,
+                leaveOpen: true);
+
+            string body = await reader.ReadToEndAsync();
+            request.Body.Position = 0;
+
+            return body;
         }
 
         private void BanIpAddress(string clientIpAddress)
