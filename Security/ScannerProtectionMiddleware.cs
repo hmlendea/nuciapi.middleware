@@ -17,21 +17,36 @@ namespace NuciAPI.Middleware.Security
 
         private static readonly string[] SafeVerbs = ["POST", "GET", "PUT", "DELETE", "PATCH"];
 
+        private static readonly string[] ForbiddenFromHeaders =
+        [
+            "oai-searchbot(at)openai.com",
+        ];
+
         private static readonly Regex[] ForbiddenResourcePatterns =
         [
+            CreateExactPathRegex("/_environment"),
             CreateExactPathRegex("/_ignition/execute-solution"),
+            CreateExactPathRegex("/.aws/config"),
+            CreateExactPathRegex("/.aws/credentials"),
             CreateExactPathRegex("/.DS_Store"),
             CreateExactPathRegex("/.env.production"),
             CreateExactPathRegex("/.env"),
+            CreateExactPathRegex("/.netrc"),
+            CreateExactPathRegex("/.npmrc"),
+            CreateExactPathRegex("/.pgpass"),
             CreateExactPathRegex("/.streamlit/secrets.toml"),
             CreateExactPathRegex("/.vscode/sftp.json"),
             CreateExactPathRegex("/.well-known/security.txt"),
             CreateExactPathRegex("/@vite/env"),
             CreateExactPathRegex("/actuator/env"),
             CreateExactPathRegex("/actuator/health"),
-            CreateExactPathRegex("/api/.env"),
+            CreateExactPathRegex("/actuator/heapdump"),
             CreateExactPathRegex("/api/gql"),
+            CreateExactPathRegex("/api/graphql"),
             CreateExactPathRegex("/app/"),
+            CreateExactPathRegex("/application.properties"),
+            CreateExactPathRegex("/application.yml"),
+            CreateExactPathRegex("/appsettings.json"),
             CreateExactPathRegex("/assets/js/auth.js"),
             CreateExactPathRegex("/assets/js/message.js"),
             CreateExactPathRegex("/assets/js/qr_modal.js"),
@@ -40,12 +55,15 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/bot-connect.js"),
             CreateExactPathRegex("/config.json"),
             CreateExactPathRegex("/config.php.bak"),
+            CreateExactPathRegex("/css/support_parent.css"),
             CreateExactPathRegex("/currentsetting.htm"),
             CreateExactPathRegex("/debug/default/view"),
             CreateExactPathRegex("/developmentserver/metadatauploader"),
             CreateExactPathRegex("/ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application"),
+            CreateExactPathRegex("/error_log"),
             CreateExactPathRegex("/geoserver/web/"),
             CreateExactPathRegex("/go"),
+            CreateExactPathRegex("/graphql"),
             CreateExactPathRegex("/graphql/api"),
             CreateExactPathRegex("/info.php"),
             CreateExactPathRegex("/js/lkk_ch.js"),
@@ -62,7 +80,7 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/next"),
             CreateExactPathRegex("/owa/auth/logon.aspx"),
             CreateExactPathRegex("/owa/auth/x.js"),
-            CreateExactPathRegex("/public/.env"),
+            CreateExactPathRegex("/profiler/_phpinfo"),
             CreateExactPathRegex("/r"),
             CreateExactPathRegex("/redirect-to"),
             CreateExactPathRegex("/redirect/"),
@@ -71,19 +89,33 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/robots.txt"),
             CreateExactPathRegex("/SDK/webLanguage"),
             CreateExactPathRegex("/security.txt"),
+            CreateExactPathRegex("/server-info.php"),
+            CreateExactPathRegex("/server-status.php"),
             CreateExactPathRegex("/sitemap.xml"),
             CreateExactPathRegex("/sse"),
-            CreateExactPathRegex("/static/style/protect/index.js"),
-            CreateExactPathRegex("/static/style/sys_files/index.js"),
             CreateExactPathRegex("/telescope/requests"),
+            CreateExactPathRegex("/terraform.tfstate"),
+            CreateExactPathRegex("/terraform.tfvars"),
             CreateExactPathRegex("/trace.axd"),
             CreateExactPathRegex("/url"),
             CreateExactPathRegex("/v2/_catalog"),
-            CreateRawRegex("^.*/index\\.php$"),
-            CreateRawRegex("^[a-z]\\.php$"),
-            CreateRawRegex("^/\\.git/.*$"),
+            CreateExactPathRegex("/web.config"),
+            CreateExactPathRegex("/webroot/index.php/_environment"),
+            CreateRawRegex("^.*/pom.properties$"),
+            CreateRawRegex("^.*/secrets\\.(json|yml)$"),
+            CreateRawRegex("^.*\\.php\\.(backuo|bak|old|swap)$"),
+            CreateRawRegex("^.*\\.php~$"),
+            CreateRawRegex("^.*\\.php$"),
+            CreateRawRegex("^.*\\.sql$"),
+            CreateRawRegex("^.*\\debug.log$"),
+            CreateRawRegex("^/.*/\\.env$"),
+            CreateRawRegex("^/.*/prodtest$"),
+            CreateRawRegex("^/\\.env[~]?$"),
+            CreateRawRegex("^/\\.env\\.[a-z]+$"),
+            CreateRawRegex("^/\\.git.*$"),
             CreateRawRegex("^/console(?:/.*)?$"),
             CreateRawRegex("^/lander/.*$"),
+            CreateRawRegex("^/static/style/[^/]*/index.js$"),
         ];
 
         private static readonly Regex[] ForbiddenQueryPatterns =
@@ -106,7 +138,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (await ShouldBanRequestAsync(context.Request))
+            if (await ShouldBanRequestAsync(context))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -121,14 +153,24 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private static async Task<bool> ShouldBanRequestAsync(HttpRequest request)
+        private async Task<bool> ShouldBanRequestAsync(HttpContext context)
         {
-            string path = request.Path.ToString();
+            HttpRequest request = context.Request;
+
+            string path = UrlDecode(request.Path.ToString());
             string queryString = request.QueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))
             {
                 return false;
+            }
+
+            string fromHeader = TryGetHeaderValue(context, "From");
+
+            if (!string.IsNullOrWhiteSpace(fromHeader) &&
+                ForbiddenFromHeaders.Contains(fromHeader, StringComparer.OrdinalIgnoreCase))
+            {
+                return true;
             }
 
             if (path == "/")
