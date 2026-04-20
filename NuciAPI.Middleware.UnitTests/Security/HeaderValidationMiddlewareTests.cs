@@ -54,6 +54,40 @@ namespace NuciAPI.Middleware.UnitTests.Security
             Assert.ThrowsAsync<BadHttpRequestException>(async () => await middleware.InvokeAsync(context));
         }
 
+        [Test]
+        public async Task Given_TimestampWithOffsetAndFractionalSeconds_When_InvokeAsync_Then_InvokesNextDelegate()
+        {
+            bool wasInvoked = false;
+            HeaderValidationMiddleware middleware = new(_ =>
+            {
+                wasInvoked = true;
+                return Task.CompletedTask;
+            });
+            DefaultHttpContext context = CreateValidContext();
+            context.Request.Headers[NuciApiHeaderNames.Timestamp] = "2026-04-20T19:47:31.1399715+03:00";
+
+            await middleware.InvokeAsync(context);
+
+            Assert.That(wasInvoked, Is.True);
+        }
+
+        [Test]
+        public async Task Given_UtcTimestampWithFractionalSeconds_When_InvokeAsync_Then_InvokesNextDelegate()
+        {
+            bool wasInvoked = false;
+            HeaderValidationMiddleware middleware = new(_ =>
+            {
+                wasInvoked = true;
+                return Task.CompletedTask;
+            });
+            DefaultHttpContext context = CreateValidContext();
+            context.Request.Headers[NuciApiHeaderNames.Timestamp] = "2026-04-20T16:43:12.7720000Z";
+
+            await middleware.InvokeAsync(context);
+
+            Assert.That(wasInvoked, Is.True);
+        }
+
         private static DefaultHttpContext CreateValidContext()
         {
             DefaultHttpContext context = new();
