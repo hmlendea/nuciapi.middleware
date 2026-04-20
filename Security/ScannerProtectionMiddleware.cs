@@ -157,7 +157,7 @@ namespace NuciAPI.Middleware.Security
         {
             HttpRequest request = context.Request;
 
-            string path = request.Path.ToString();
+            string path = UrlDecode(request.Path.ToString());
             string queryString = request.QueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))

@@ -44,7 +44,7 @@ namespace NuciAPI.Middleware
                 return null;
             }
 
-            return Uri.UnescapeDataString(rawValue);
+            return UrlDecode(rawValue);
         }
 
         protected string GetClientIpAddress(HttpContext context)
@@ -65,6 +65,23 @@ namespace NuciAPI.Middleware
             }
 
             return context.Connection.RemoteIpAddress?.ToString();
+        }
+
+        protected static string UrlDecode(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || !text.Contains('%'))
+            {
+                return text;
+            }
+
+            try
+            {
+                return Uri.UnescapeDataString(text);
+            }
+            catch (UriFormatException)
+            {
+                return text;
+            }
         }
 
         private static bool TryGetClientIpFromHeaderValue(string headerName, string headerValue, out string clientIpAddress)
