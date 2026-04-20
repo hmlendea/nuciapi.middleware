@@ -8,6 +8,7 @@ namespace NuciAPI.Middleware.Logging
 
         public static LogInfoKey ClientId => new MyLogInfoKey(nameof(ClientId));
         public static LogInfoKey ElapsedMilliseconds => new MyLogInfoKey(nameof(ElapsedMilliseconds));
+        public static LogInfoKey Hostname => new MyLogInfoKey(nameof(Hostname));
         public static LogInfoKey HmacToken => new MyLogInfoKey(nameof(HmacToken));
         public static LogInfoKey IpAddress => new MyLogInfoKey(nameof(IpAddress));
         public static LogInfoKey Method => new MyLogInfoKey(nameof(Method));
