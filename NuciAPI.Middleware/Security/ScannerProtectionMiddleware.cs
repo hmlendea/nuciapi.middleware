@@ -29,8 +29,6 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/.aws/config"),
             CreateExactPathRegex("/.aws/credentials"),
             CreateExactPathRegex("/.DS_Store"),
-            CreateExactPathRegex("/.env.production"),
-            CreateExactPathRegex("/.env"),
             CreateExactPathRegex("/.netrc"),
             CreateExactPathRegex("/.npmrc"),
             CreateExactPathRegex("/.pgpass"),
@@ -54,7 +52,6 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/aws.env"),
             CreateExactPathRegex("/bot-connect.js"),
             CreateExactPathRegex("/config.json"),
-            CreateExactPathRegex("/config.php.bak"),
             CreateExactPathRegex("/css/support_parent.css"),
             CreateExactPathRegex("/currentsetting.htm"),
             CreateExactPathRegex("/debug/default/view"),
@@ -65,16 +62,8 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/go"),
             CreateExactPathRegex("/graphql"),
             CreateExactPathRegex("/graphql/api"),
-            CreateExactPathRegex("/info.php"),
             CreateExactPathRegex("/js/lkk_ch.js"),
             CreateExactPathRegex("/js/twint_ch.js"),
-            CreateExactPathRegex("/lander/"),
-            CreateExactPathRegex("/lander/pkn-orlen-lend/"),
-            CreateExactPathRegex("/lander/pl_4/index.html"),
-            CreateExactPathRegex("/lander/pl---immediate-bitwave-2/"),
-            CreateExactPathRegex("/lander/pl---interpol0/"),
-            CreateExactPathRegex("/lander/pl-orlen/"),
-            CreateExactPathRegex("/lander/polskagoldai/index.html"),
             CreateExactPathRegex("/login.action"),
             CreateExactPathRegex("/mcp"),
             CreateExactPathRegex("/next"),
@@ -89,8 +78,6 @@ namespace NuciAPI.Middleware.Security
             CreateExactPathRegex("/robots.txt"),
             CreateExactPathRegex("/SDK/webLanguage"),
             CreateExactPathRegex("/security.txt"),
-            CreateExactPathRegex("/server-info.php"),
-            CreateExactPathRegex("/server-status.php"),
             CreateExactPathRegex("/sitemap.xml"),
             CreateExactPathRegex("/sse"),
             CreateExactPathRegex("/telescope/requests"),
@@ -138,7 +125,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (await ShouldBanRequestAsync(context))
+            if (await ShouldBanRequestAsync(context.Request))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -153,19 +140,16 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private async Task<bool> ShouldBanRequestAsync(HttpContext context)
+        private async Task<bool> ShouldBanRequestAsync(HttpRequest request)
         {
-            HttpRequest request = context.Request;
-
             string path = UrlDecode(request.Path.ToString());
-            string queryString = request.QueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))
             {
                 return false;
             }
 
-            string fromHeader = TryGetHeaderValue(context, "From");
+            string fromHeader = TryGetHeaderValue(request, "From");
 
             if (!string.IsNullOrWhiteSpace(fromHeader) &&
                 ForbiddenFromHeaders.Contains(fromHeader, StringComparer.OrdinalIgnoreCase))
@@ -173,7 +157,28 @@ namespace NuciAPI.Middleware.Security
                 return true;
             }
 
-            if (path == "/")
+            foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
+            {
+                if (forbiddenResourcePattern.IsMatch(path))
+                {
+                    return true;
+                }
+            }
+
+            string queryString = request.QueryString.ToString().TrimStart('?');
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                foreach (Regex forbiddenQueryPattern in ForbiddenQueryPatterns)
+                {
+                    if (forbiddenQueryPattern.IsMatch(queryString))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (path.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
                 if (!SafeVerbs.Contains(request.Method, StringComparer.OrdinalIgnoreCase))
                 {
@@ -186,25 +191,6 @@ namespace NuciAPI.Middleware.Security
                     string.IsNullOrWhiteSpace(body))
                 {
                     return true;
-                }
-            }
-
-            foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
-            {
-                if (forbiddenResourcePattern.IsMatch(path))
-                {
-                    return true;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(queryString))
-            {
-                foreach (Regex forbiddenQueryPattern in ForbiddenQueryPatterns)
-                {
-                    if (forbiddenQueryPattern.IsMatch(queryString))
-                    {
-                        return true;
-                    }
                 }
             }
 
