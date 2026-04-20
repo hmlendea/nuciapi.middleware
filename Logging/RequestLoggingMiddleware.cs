@@ -22,10 +22,10 @@ namespace NuciAPI.Middleware.Logging
                 new LogInfo(MyLogInfoKey.Path, context.Request.Path),
                 new LogInfo(MyLogInfoKey.QueryString, context.Request.QueryString.ToString()),
                 new LogInfo(MyLogInfoKey.IpAddress, GetClientIpAddress(context)),
-                new LogInfo(MyLogInfoKey.ClientId, TryGetHeaderValue(context, NuciApiHeaderNames.ClientId)),
-                new LogInfo(MyLogInfoKey.RequestId, TryGetHeaderValue(context, NuciApiHeaderNames.RequestId)),
-                new LogInfo(MyLogInfoKey.Timestamp, TryGetHeaderValue(context, NuciApiHeaderNames.Timestamp)),
-                new LogInfo(MyLogInfoKey.HmacToken, TryGetHeaderValue(context, NuciApiHeaderNames.HmacToken))
+                new LogInfo(MyLogInfoKey.ClientId, TryGetHeaderValue(context.Request, NuciApiHeaderNames.ClientId)),
+                new LogInfo(MyLogInfoKey.RequestId, TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId)),
+                new LogInfo(MyLogInfoKey.Timestamp, TryGetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp)),
+                new LogInfo(MyLogInfoKey.HmacToken, TryGetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken))
             ];
 
             logger.Info(

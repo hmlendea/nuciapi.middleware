@@ -14,9 +14,9 @@ namespace NuciAPI.Middleware.Security
 
         public override async Task InvokeAsync(HttpContext context)
         {
-            string clientId = GetHeaderValue(context, NuciApiHeaderNames.ClientId);
-            string requestId = GetHeaderValue(context, NuciApiHeaderNames.RequestId);
-            DateTimeOffset timestamp = DateTimeOffset.Parse(GetHeaderValue(context, NuciApiHeaderNames.Timestamp));
+            string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
+            string requestId = GetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
+            DateTimeOffset timestamp = DateTimeOffset.Parse(GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp));
 
             TimeSpan allowedSkew = TimeSpan.FromMinutes(5);
             TimeSpan difference = DateTimeOffset.UtcNow - timestamp;

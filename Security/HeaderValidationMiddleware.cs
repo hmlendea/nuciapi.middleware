@@ -19,7 +19,7 @@ namespace NuciAPI.Middleware.Security
 
         private void ValidateClientId(HttpContext context)
         {
-            string clientId = GetHeaderValue(context, NuciApiHeaderNames.ClientId);
+            string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
 
             if (clientId.Length <= 3)
             {
@@ -30,7 +30,7 @@ namespace NuciAPI.Middleware.Security
 
         private void ValidateRequestId(HttpContext context)
         {
-            string requestIdRaw = GetHeaderValue(context, NuciApiHeaderNames.RequestId);
+            string requestIdRaw = GetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
 
             if (!Guid.TryParse(requestIdRaw, out Guid _) ||
                 !requestIdRaw.Equals(requestIdRaw.ToUpper()))
@@ -42,7 +42,7 @@ namespace NuciAPI.Middleware.Security
 
         private void ValidateTimestamp(HttpContext context)
         {
-            string timestampRaw = GetHeaderValue(context, NuciApiHeaderNames.Timestamp);
+            string timestampRaw = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
 
             if (!DateTimeOffset.TryParse(timestampRaw, out DateTimeOffset _))
             {

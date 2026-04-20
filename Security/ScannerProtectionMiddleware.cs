@@ -138,7 +138,7 @@ namespace NuciAPI.Middleware.Security
                 return;
             }
 
-            if (await ShouldBanRequestAsync(context))
+            if (await ShouldBanRequestAsync(context.Request))
             {
                 BanIpAddress(clientIpAddress);
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -153,10 +153,8 @@ namespace NuciAPI.Middleware.Security
             => !string.IsNullOrWhiteSpace(clientIpAddress) &&
                memoryCache.TryGetValue(GetBannedIpAddressCacheKey(clientIpAddress), out bool _);
 
-        private async Task<bool> ShouldBanRequestAsync(HttpContext context)
+        private async Task<bool> ShouldBanRequestAsync(HttpRequest request)
         {
-            HttpRequest request = context.Request;
-
             string path = UrlDecode(request.Path.ToString());
 
             if (string.IsNullOrWhiteSpace(path))
@@ -164,7 +162,7 @@ namespace NuciAPI.Middleware.Security
                 return false;
             }
 
-            string fromHeader = TryGetHeaderValue(context, "From");
+            string fromHeader = TryGetHeaderValue(request, "From");
 
             if (!string.IsNullOrWhiteSpace(fromHeader) &&
                 ForbiddenFromHeaders.Contains(fromHeader, StringComparer.OrdinalIgnoreCase))
