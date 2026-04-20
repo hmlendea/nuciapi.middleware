@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
+using NuciWeb.HTTP;
 
 namespace NuciAPI.Middleware
 {
@@ -46,6 +47,9 @@ namespace NuciAPI.Middleware
 
             return UrlDecode(rawValue);
         }
+
+        protected List<string> GetClientHostname(HttpContext context)
+            => NetworkUtils.GetHostnames(GetClientIpAddress(context));
 
         protected string GetClientIpAddress(HttpContext context)
         {
