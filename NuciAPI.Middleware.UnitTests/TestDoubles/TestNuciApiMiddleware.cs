@@ -7,9 +7,9 @@ namespace NuciAPI.Middleware.UnitTests.TestDoubles
     {
         public override Task InvokeAsync(HttpContext context) => Next(context);
 
-        public string GetHeader(HttpContext context, string headerName) => GetHeaderValue(context, headerName);
+        public string GetHeader(HttpContext context, string headerName) => GetHeaderValue(context.Request, headerName);
 
-        public string TryGetHeader(HttpContext context, string headerName) => TryGetHeaderValue(context, headerName);
+        public string TryGetHeader(HttpContext context, string headerName) => TryGetHeaderValue(context.Request, headerName);
 
         public string GetClientIp(HttpContext context) => GetClientIpAddress(context);
 
