@@ -1,5 +1,10 @@
+using System;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace NuciAPI.Middleware.Security
 {
