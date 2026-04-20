@@ -22,6 +22,7 @@
     <PackageReference Include="NuciDAL" Version="3.0.1" />
     <PackageReference Include="NuciLog" Version="1.1.2" />
     <PackageReference Include="NuciLog.Core" Version="2.6.0" />
+    <PackageReference Include="NuciWeb.HTTP" Version="1.5.0" />
   </ItemGroup>
 
 

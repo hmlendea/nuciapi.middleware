@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NuciLog.Core;
+using NuciWeb.HTTP;
 
 namespace NuciAPI.Middleware.Logging
 {
@@ -16,12 +17,15 @@ namespace NuciAPI.Middleware.Logging
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
+            string ipAddress = GetClientIpAddress(context);
+
             IEnumerable<LogInfo> logInfos =
             [
                 new LogInfo(MyLogInfoKey.Method, context.Request.Method),
                 new LogInfo(MyLogInfoKey.Path, context.Request.Path),
                 new LogInfo(MyLogInfoKey.QueryString, context.Request.QueryString.ToString()),
-                new LogInfo(MyLogInfoKey.IpAddress, GetClientIpAddress(context)),
+                new LogInfo(MyLogInfoKey.IpAddress, ipAddress),
+                new LogInfo(MyLogInfoKey.Hostname, string.Join(',', NetworkUtils.GetHostnames(ipAddress))),
                 new LogInfo(MyLogInfoKey.ClientId, TryGetHeaderValue(context, NuciApiHeaderNames.ClientId)),
                 new LogInfo(MyLogInfoKey.RequestId, TryGetHeaderValue(context, NuciApiHeaderNames.RequestId)),
                 new LogInfo(MyLogInfoKey.Timestamp, TryGetHeaderValue(context, NuciApiHeaderNames.Timestamp)),
