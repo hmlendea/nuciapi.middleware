@@ -27,6 +27,80 @@ namespace NuciAPI.Middleware.UnitTests.Security
         }
 
         [Test]
+        public async Task Given_TimestampWithOffsetAndFractionalSecondsAcrossHeaderValidationAndReplay_When_InvokeAsync_Then_InvokesNextDelegate()
+        {
+            using MemoryCache memoryCache = new(new MemoryCacheOptions());
+            bool wasInvoked = false;
+            ReplayProtectionMiddleware replayProtectionMiddleware = new(_ =>
+            {
+                wasInvoked = true;
+                return Task.CompletedTask;
+            }, memoryCache);
+            HeaderValidationMiddleware headerValidationMiddleware = new(replayProtectionMiddleware.InvokeAsync);
+            DefaultHttpContext context = CreateValidContext(
+                timestampHeaderValue: DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(3)).ToString("O"));
+
+            await headerValidationMiddleware.InvokeAsync(context);
+
+            Assert.That(wasInvoked, Is.True);
+        }
+
+        [Test]
+        public async Task Given_UtcTimestampWithFractionalSecondsAcrossHeaderValidationAndReplay_When_InvokeAsync_Then_InvokesNextDelegate()
+        {
+            using MemoryCache memoryCache = new(new MemoryCacheOptions());
+            bool wasInvoked = false;
+            ReplayProtectionMiddleware replayProtectionMiddleware = new(_ =>
+            {
+                wasInvoked = true;
+                return Task.CompletedTask;
+            }, memoryCache);
+            HeaderValidationMiddleware headerValidationMiddleware = new(replayProtectionMiddleware.InvokeAsync);
+            DefaultHttpContext context = CreateValidContext(
+                timestampHeaderValue: DateTime.UtcNow.ToString("O"));
+
+            await headerValidationMiddleware.InvokeAsync(context);
+
+            Assert.That(wasInvoked, Is.True);
+        }
+
+        [Test]
+        public async Task Given_TimestampWithOffsetAndFractionalSecondsWithinAllowedSkew_When_InvokeAsync_Then_InvokesNextDelegate()
+        {
+            using MemoryCache memoryCache = new(new MemoryCacheOptions());
+            bool wasInvoked = false;
+            ReplayProtectionMiddleware middleware = new(_ =>
+            {
+                wasInvoked = true;
+                return Task.CompletedTask;
+            }, memoryCache);
+            DefaultHttpContext context = CreateValidContext(
+                timestampHeaderValue: DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(3)).ToString("O"));
+
+            await middleware.InvokeAsync(context);
+
+            Assert.That(wasInvoked, Is.True);
+        }
+
+        [Test]
+        public async Task Given_UtcTimestampWithFractionalSecondsWithinAllowedSkew_When_InvokeAsync_Then_InvokesNextDelegate()
+        {
+            using MemoryCache memoryCache = new(new MemoryCacheOptions());
+            bool wasInvoked = false;
+            ReplayProtectionMiddleware middleware = new(_ =>
+            {
+                wasInvoked = true;
+                return Task.CompletedTask;
+            }, memoryCache);
+            DefaultHttpContext context = CreateValidContext(
+                timestampHeaderValue: DateTime.UtcNow.ToString("O"));
+
+            await middleware.InvokeAsync(context);
+
+            Assert.That(wasInvoked, Is.True);
+        }
+
+        [Test]
         public async Task Given_DuplicateRequest_When_InvokeAsync_Then_ThrowsRequestAlreadyProcessedException()
         {
             using MemoryCache memoryCache = new(new MemoryCacheOptions());
@@ -67,13 +141,16 @@ namespace NuciAPI.Middleware.UnitTests.Security
                 Throws.ArgumentNullException);
         }
 
-        private static DefaultHttpContext CreateValidContext(string? requestId = null, DateTimeOffset? timestamp = null)
+        private static DefaultHttpContext CreateValidContext(
+            string? requestId = null,
+            DateTimeOffset? timestamp = null,
+            string? timestampHeaderValue = null)
         {
             DefaultHttpContext context = new();
             context.Request.Path = "/resource";
             context.Request.Headers[NuciApiHeaderNames.ClientId] = "client-123";
             context.Request.Headers[NuciApiHeaderNames.RequestId] = requestId ?? Guid.NewGuid().ToString().ToUpperInvariant();
-            context.Request.Headers[NuciApiHeaderNames.Timestamp] = (timestamp ?? DateTimeOffset.UtcNow).ToString("O");
+            context.Request.Headers[NuciApiHeaderNames.Timestamp] = timestampHeaderValue ?? (timestamp ?? DateTimeOffset.UtcNow).ToString("O");
             return context;
         }
     }
