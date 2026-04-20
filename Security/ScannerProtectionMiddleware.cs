@@ -158,7 +158,6 @@ namespace NuciAPI.Middleware.Security
             HttpRequest request = context.Request;
 
             string path = UrlDecode(request.Path.ToString());
-            string queryString = request.QueryString.ToString().TrimStart('?');
 
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -173,7 +172,28 @@ namespace NuciAPI.Middleware.Security
                 return true;
             }
 
-            if (path == "/")
+            foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
+            {
+                if (forbiddenResourcePattern.IsMatch(path))
+                {
+                    return true;
+                }
+            }
+
+            string queryString = request.QueryString.ToString().TrimStart('?');
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                foreach (Regex forbiddenQueryPattern in ForbiddenQueryPatterns)
+                {
+                    if (forbiddenQueryPattern.IsMatch(queryString))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (path.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
                 if (!SafeVerbs.Contains(request.Method, StringComparer.OrdinalIgnoreCase))
                 {
@@ -186,25 +206,6 @@ namespace NuciAPI.Middleware.Security
                     string.IsNullOrWhiteSpace(body))
                 {
                     return true;
-                }
-            }
-
-            foreach (Regex forbiddenResourcePattern in ForbiddenResourcePatterns)
-            {
-                if (forbiddenResourcePattern.IsMatch(path))
-                {
-                    return true;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(queryString))
-            {
-                foreach (Regex forbiddenQueryPattern in ForbiddenQueryPatterns)
-                {
-                    if (forbiddenQueryPattern.IsMatch(queryString))
-                    {
-                        return true;
-                    }
                 }
             }
 
