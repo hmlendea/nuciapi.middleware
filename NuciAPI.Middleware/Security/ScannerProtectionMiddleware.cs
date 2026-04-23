@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,6 +17,19 @@ namespace NuciAPI.Middleware.Security
         private static readonly TimeSpan BanDuration = TimeSpan.FromHours(10);
 
         private static readonly string[] SafeVerbs = ["POST", "GET", "PUT", "DELETE", "PATCH"];
+
+        private static readonly string[] ForbiddenUserAgentKeywords =
+        [
+            "Chrome/143.0.0.0",
+            "InternetMeasurement",
+            "OAI-SearchBot",
+            "SecurityScanner",
+        ];
+
+        private static readonly string[] ForbiddenClientHintsKeywords =
+        [
+            ".Not/A)Brand"
+        ];
 
         private static readonly string[] ForbiddenFromHeaders =
         [
@@ -204,6 +218,22 @@ namespace NuciAPI.Middleware.Security
                 {
                     return true;
                 }
+            }
+
+            string userAgent = TryGetHeaderValue(request, "User-Agent");
+
+            if (!string.IsNullOrWhiteSpace(userAgent) &&
+                ForbiddenUserAgentKeywords.Any(keyword => userAgent.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            string clientHints = TryGetHeaderValue(request, "sec-ch-ua");
+
+            if (!string.IsNullOrWhiteSpace(clientHints) &&
+                ForbiddenClientHintsKeywords.Any(keyword => clientHints.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
             }
 
             return false;
