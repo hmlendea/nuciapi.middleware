@@ -8,7 +8,6 @@ using System.Security.Authentication;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NuciAPI.Middleware.ExceptionHandling;
-using NuciAPI.Middleware.Security;
 using NUnit.Framework;
 
 namespace NuciAPI.Middleware.UnitTests.ExceptionHandling

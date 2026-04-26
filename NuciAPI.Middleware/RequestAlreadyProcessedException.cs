@@ -1,6 +1,6 @@
 using System;
 
-namespace NuciAPI.Middleware.Security
+namespace NuciAPI.Middleware
 {
     /// <summary>
     /// Exception thrown when a request with the same client ID, request ID and path has already been processed within the allowed time window.

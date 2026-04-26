@@ -7,7 +7,6 @@ using System.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using NuciAPI.Middleware.Security;
 using NuciAPI.Responses;
 using NuciDAL.Repositories;
 
