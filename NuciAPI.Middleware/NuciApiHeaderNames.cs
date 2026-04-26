@@ -1,10 +1,10 @@
 namespace NuciAPI.Middleware
 {
-    internal static class NuciApiHeaderNames
+    public static class NuciApiHeaderNames
     {
-        internal static string ClientId => "X-Client-ID";
-        internal static string HmacToken => "X-HMAC";
-        internal static string RequestId => "X-Request-ID";
-        internal static string Timestamp => "X-Timestamp";
+        public static string ClientId => "X-Client-ID";
+        public static string HmacToken => "X-HMAC";
+        public static string RequestId => "X-Request-ID";
+        public static string Timestamp => "X-Timestamp";
     }
 }
