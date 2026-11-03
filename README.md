@@ -133,6 +133,12 @@ NuciAPI.Middleware is a NuGet library providing ASP.NET Core middleware base uti
 
 For the detailed description of how the library handles privacy and personal data, see [PRIVACY.md](./PRIVACY.md).
 
+## 🔒 Security
+
+NuciAPI.Middleware follows coordinated disclosure for security vulnerabilities. Only the latest version distributed via NuGet.org and GitHub Releases receives security maintenance.
+
+For information on reporting security vulnerabilities, see [SECURITY.md](./SECURITY.md).
+
 ## License
 
 Licensed under the GNU General Public License v3.0 or later.
