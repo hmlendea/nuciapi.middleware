@@ -139,6 +139,10 @@ NuciAPI.Middleware follows coordinated disclosure for security vulnerabilities. 
 
 For information on reporting security vulnerabilities, see [SECURITY.md](./SECURITY.md).
 
+## 🤝 Contributing
+
+See the [contributing guidelines](./CONTRIBUTING.md) for details on how to report issues, suggest enhancements, and submit changes.
+
 ## License
 
 Licensed under the GNU General Public License v3.0 or later.
