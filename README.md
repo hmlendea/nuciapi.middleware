@@ -151,6 +151,26 @@ See the [Code of Conduct](./CODE_OF_CONDUCT.md) for the standards of conduct exp
 
 See the [Architecture](./ARCHITECTURE.md) for the system architecture, component boundaries, runtime flows, and design constraints.
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [docs/](./docs/) directory:
+
+| Document | Description |
+|----------|-------------|
+| [Quick Start](./docs/quick-start.md) | Get running in 5 minutes |
+| [Architecture](./docs/architecture.md) | Technical architecture overview |
+| [API Reference](./docs/api-reference/INDEX.md) | Complete API documentation |
+| [Components](./docs/components/) | Public API, pipeline integration, helper contracts |
+| [Flows](./docs/flows/) | Request pipeline, IP extraction, header access |
+| [Security](./docs/security.md) | Threat model, HMAC patterns, hardening |
+| [Testing](./docs/testing.md) | Unit and integration test strategies |
+| [Build & Deployment](./docs/build-and-deployment.md) | CI/CD, versioning, packaging |
+| [Troubleshooting](./docs/troubleshooting.md) | Common issues and solutions |
+| [FAQ](./docs/faq.md) | Frequently asked questions |
+| [Change Guide](./docs/change-guide.md) | Versioning and migration |
+
+See [docs/INDEX.md](./docs/INDEX.md) for the complete documentation catalogue.
+
 ## License
 
 Licensed under the GNU General Public License v3.0 or later.
