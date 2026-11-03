@@ -75,7 +75,7 @@ sequenceDiagram
     participant MW as MyMiddleware (derived)
     participant Base as NuciApiMiddleware (base)
     participant Next as Next Middleware
-    
+
     Client->>ASPNetCore: HTTP Request
     ASPNetCore->>MW: InvokeAsync(HttpContext)
     MW->>Base: GetHeaderValue(Request, "X-Client-ID")

@@ -169,9 +169,9 @@ protected override List<string> GetClientHostname(HttpContext context)
 {
     var ip = GetClientIpAddress(context);
     if (ip == null) return [];
-    
+
     if (_cache.TryGet(ip, out var cached)) return cached;
-    
+
     var hostnames = base.GetClientHostname(context);
     _cache.Set(ip, hostnames, TimeSpan.FromMinutes(5));
     return hostnames;

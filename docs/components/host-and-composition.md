@@ -123,11 +123,11 @@ NuciAPI.Middleware **does not use or require** dependency injection:
 - Consumers can inject services into their derived middleware via constructor injection if needed:
 
 ```csharp
-public sealed class MyMiddleware(RequestDelegate next, IMyService service) 
+public sealed class MyMiddleware(RequestDelegate next, IMyService service)
     : NuciApiMiddleware(next)
 {
     private readonly IMyService _service = service;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         // Use _service...
@@ -157,9 +157,9 @@ The test double `TestNuciApiMiddleware` (in `NuciAPI.Middleware.UnitTests.TestDo
 internal sealed class TestNuciApiMiddleware(RequestDelegate next) : NuciApiMiddleware(next)
 {
     public override Task InvokeAsync(HttpContext context) => Next(context);
-    
+
     // Exposes protected helpers for testing
-    public string GetHeader(HttpContext context, string headerName) 
+    public string GetHeader(HttpContext context, string headerName)
         => GetHeaderValue(context.Request, headerName);
     // ... other exposed helpers
 }

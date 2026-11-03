@@ -46,7 +46,7 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 app.UseMiddleware<AuthMiddleware>();
 
-app.MapGet("/api/data", (HttpContext ctx) => 
+app.MapGet("/api/data", (HttpContext ctx) =>
 {
     var clientId = ctx.Request.Headers["X-Client-ID"].FirstOrDefault();
     return Results.Ok(new { ClientId = clientId });
@@ -176,19 +176,19 @@ builder.Services.AddOpenTelemetry()
         .AddOtlpExporter());
 
 // Custom middleware with tracing
-public sealed class TracedMiddleware(RequestDelegate next, ILogger<TracedMiddleware> logger) 
+public sealed class TracedMiddleware(RequestDelegate next, ILogger<TracedMiddleware> logger)
     : NuciApiMiddleware(next)
 {
     private static readonly ActivitySource ActivitySource = new("NuciAPI.Middleware");
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         using var activity = ActivitySource.StartActivity("Middleware.Invoke", ActivityKind.Server);
         activity?.SetTag("client.id", TryGetHeaderValue(context.Request, NuciApiHeaderNames.ClientId) ?? "unknown");
         activity?.SetTag("client.ip", GetClientIpAddress(context) ?? "unknown");
-        
+
         await Next(context);
-        
+
         activity?.SetTag("http.status_code", context.Response.StatusCode);
     }
 }
@@ -204,12 +204,12 @@ public sealed class MetricsMiddleware(RequestDelegate next) : NuciApiMiddleware(
         .CreateCounter("nuciapi_middleware_requests_total", "Total requests", "client_id", "status");
     private static readonly Histogram RequestDuration = Metrics
         .CreateHistogram("nuciapi_middleware_request_duration_seconds", "Request duration", "client_id");
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         var clientId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.ClientId) ?? "unknown";
         var sw = Stopwatch.StartNew();
-        
+
         try
         {
             await Next(context);
@@ -242,13 +242,13 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // In middleware
-public sealed class LoggingMiddleware(RequestDelegate next, ILogger<LoggingMiddleware> logger) 
+public sealed class LoggingMiddleware(RequestDelegate next, ILogger<LoggingMiddleware> logger)
     : NuciApiMiddleware(next)
 {
     public override async Task InvokeAsync(HttpContext context)
     {
         var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId) ?? Guid.NewGuid().ToString("N");
-        
+
         using (LogContext.PushProperty("RequestId", requestId))
         using (LogContext.PushProperty("ClientId", TryGetHeaderValue(context.Request, NuciApiHeaderNames.ClientId) ?? "anonymous"))
         using (LogContext.PushProperty("ClientIp", GetClientIpAddress(context) ?? "unknown"))

@@ -241,10 +241,10 @@ public async Task Given_OldApi_When_Used_Then_StillWorks()
     var middleware = new TestNuciApiMiddleware(_ => Task.CompletedTask);
     var context = new DefaultHttpContext();
     context.Request.Headers["X-Forwarded-For"] = "198.51.100.10";
-    
+
     // Old API should still work during deprecation period
     var ip = middleware.GetClientIp(context);
-    
+
     Assert.That(ip, Is.EqualTo("198.51.100.10"));
 }
 ```

@@ -151,8 +151,8 @@ private static readonly string[] ClientIpForwardingHeaderNames =
 
 ```csharp
 private static bool TryGetClientIpFromHeaderValue(
-    string headerName, 
-    string headerValue, 
+    string headerName,
+    string headerValue,
     out string clientIpAddress)
 ```
 
@@ -242,7 +242,7 @@ public sealed class MyMiddleware(RequestDelegate next) : NuciApiMiddleware(next)
         // Fall back to base implementation
         return base.GetClientIpAddress(context);
     }
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         string ip = GetClientIpAddress(context); // Uses overridden version
@@ -283,16 +283,16 @@ The test double `TestNuciApiMiddleware` exposes all protected helpers as public 
 
 ```csharp
 // In NuciAPI.Middleware.UnitTests.TestDoubles.TestNuciApiMiddleware
-public string GetHeader(HttpContext context, string headerName) 
+public string GetHeader(HttpContext context, string headerName)
     => GetHeaderValue(context.Request, headerName);
 
-public string TryGetHeader(HttpContext context, string headerName) 
+public string TryGetHeader(HttpContext context, string headerName)
     => TryGetHeaderValue(context.Request, headerName);
 
-public string GetClientIp(HttpContext context) 
+public string GetClientIp(HttpContext context)
     => GetClientIpAddress(context);
 
-public string Decode(string text) 
+public string Decode(string text)
     => UrlDecode(text);
 ```
 

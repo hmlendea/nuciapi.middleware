@@ -179,7 +179,7 @@ builder.Services.AddHealthChecks()
 public sealed class ClientRegistryHealthCheck : IHealthCheck
 {
     private readonly IClientRegistry _registry;
-    
+
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct = default)
     {
         try
@@ -206,12 +206,12 @@ public sealed class MetricsMiddleware(RequestDelegate next, IMeterFactory meterF
         .CreateCounter<long>("middleware_requests_total");
     private readonly Histogram<double> _requestDuration = meterFactory.CreateMeter("NuciAPI.Middleware")
         .CreateHistogram<double>("middleware_request_duration_seconds");
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         var clientId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.ClientId) ?? "unknown";
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             await Next(context);
@@ -245,10 +245,10 @@ public sealed class TestHmacValidator : IHmacValidator
 public sealed class TestClientRegistry : IClientRegistry
 {
     private readonly Dictionary<string, (string Secret, bool Active)> _clients = new();
-    
+
     public void AddClient(string clientId, string secret, bool active = true)
         => _clients[clientId] = (secret, active);
-    
+
     public bool TryGetSecret(string clientId, out string secretBase64)
     {
         if (_clients.TryGetValue(clientId, out var client) && client.Active)
@@ -259,7 +259,7 @@ public sealed class TestClientRegistry : IClientRegistry
         secretBase64 = null;
         return false;
     }
-    
+
     public bool IsActive(string clientId) => _clients.TryGetValue(clientId, out var c) && c.Active;
     public ClientMetadata GetMetadata(string clientId) => new() { ClientId = clientId };
 }

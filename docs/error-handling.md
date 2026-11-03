@@ -44,14 +44,14 @@ public override async Task InvokeAsync(HttpContext context)
     // Throws BadHttpRequestException if missing → 400 automatically
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
     string hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
-    
+
     // Validate HMAC
     if (!_hmacValidator.Validate(clientId, hmac, context.Request))
     {
         context.Response.StatusCode = 401;
         return; // Short-circuit, don't call Next
     }
-    
+
     await Next(context);
 }
 ```
@@ -64,13 +64,13 @@ public override async Task InvokeAsync(HttpContext context)
     // Returns null if missing — no exception
     string requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
     string timestamp = TryGetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
-    
+
     // Use for correlation if present
     if (requestId != null)
     {
         context.Items["CorrelationId"] = requestId;
     }
-    
+
     await Next(context);
 }
 ```
@@ -81,7 +81,7 @@ public override async Task InvokeAsync(HttpContext context)
 public override async Task InvokeAsync(HttpContext context)
 {
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-    
+
     // Custom business validation
     if (!_clientRegistry.IsActive(clientId))
     {
@@ -89,14 +89,14 @@ public override async Task InvokeAsync(HttpContext context)
         await context.Response.WriteAsync("Client inactive");
         return;
     }
-    
+
     if (!_rateLimiter.TryAcquire(clientId))
     {
         context.Response.StatusCode = 429;
         context.Response.Headers.RetryAfter = "60";
         return;
     }
-    
+
     await Next(context);
 }
 ```
@@ -119,9 +119,9 @@ public override async Task InvokeAsync(HttpContext context)
     catch (Exception ex) when (ex is not OperationCanceledException)
     {
         // Log unexpected errors
-        _logger.LogError(ex, "Middleware error for client {ClientId}", 
+        _logger.LogError(ex, "Middleware error for client {ClientId}",
             context.Request.Headers[NuciApiHeaderNames.ClientId].FirstOrDefault());
-        
+
         // Don't expose internal errors
         context.Response.StatusCode = 500;
     }
@@ -149,7 +149,7 @@ private static async Task WriteErrorResponse(HttpContext context, int statusCode
 {
     context.Response.StatusCode = statusCode;
     context.Response.ContentType = "application/problem+json";
-    
+
     var problem = new
     {
         type = $"https://httpstatuses.com/{statusCode}",
@@ -159,7 +159,7 @@ private static async Task WriteErrorResponse(HttpContext context, int statusCode
         detail = message,
         instance = context.Request.Path
     };
-    
+
     await context.Response.WriteAsJsonAsync(problem);
 }
 
@@ -179,18 +179,18 @@ private static string GetTitle(int statusCode) => statusCode switch
 ## Logging Errors
 
 ```csharp
-public sealed class MyMiddleware(RequestDelegate next, ILogger<MyMiddleware> logger) 
+public sealed class MyMiddleware(RequestDelegate next, ILogger<MyMiddleware> logger)
     : NuciApiMiddleware(next)
 {
     private readonly ILogger<MyMiddleware> _logger = logger;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         try
         {
             string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
             _logger.LogInformation("Request from client {ClientId}", clientId);
-            
+
             await Next(context);
         }
         catch (BadHttpRequestException ex)
@@ -217,11 +217,11 @@ public async Task Given_MissingRequiredHeader_When_InvokeAsync_Then_Returns400()
     var middleware = new TestNuciApiMiddleware(_ => Task.CompletedTask);
     var context = new DefaultHttpContext();
     // No X-Client-ID header
-    
+
     // Act & Assert
-    var ex = Assert.ThrowsAsync<BadHttpRequestException>(() => 
+    var ex = Assert.ThrowsAsync<BadHttpRequestException>(() =>
         middleware.InvokeAsync(context));
-    
+
     Assert.That(ex.Message, Does.Contain("X-Client-ID"));
 }
 
@@ -235,10 +235,10 @@ public async Task Given_InvalidHmac_When_InvokeAsync_Then_Returns401()
     context.Request.Headers[NuciApiHeaderNames.HmacToken] = "invalid";
     _mockHmacValidator.Setup(v => v.Validate(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<HttpRequest>()))
         .Returns(false);
-    
+
     // Act
     await middleware.InvokeAsync(context);
-    
+
     // Assert
     Assert.That(context.Response.StatusCode, Is.EqualTo(401));
 }

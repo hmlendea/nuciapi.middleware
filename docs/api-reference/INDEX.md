@@ -18,7 +18,7 @@ This section provides detailed reference documentation for all public APIs in Nu
 
 ### NuciApiMiddleware (Abstract Base Class)
 
-**Namespace:** `NuciAPI.Middleware`  
+**Namespace:** `NuciAPI.Middleware`
 **Assembly:** `NuciAPI.Middleware.dll`
 
 Base class for building custom ASP.NET Core middleware with common utilities for header access, client IP extraction, and hostname resolution.
@@ -58,7 +58,7 @@ protected NuciApiMiddleware(RequestDelegate next)
 
 ### NuciApiHeaderNames (Static Class)
 
-**Namespace:** `NuciAPI.Middleware`  
+**Namespace:** `NuciAPI.Middleware`
 **Assembly:** `NuciAPI.Middleware.dll`
 
 Constants for standard header names used by the middleware ecosystem.

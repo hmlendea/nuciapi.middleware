@@ -94,7 +94,7 @@ flowchart TD
     CheckUnknown -->|No| CheckBracket{Starts with '['?}
     CheckBracket -->|Yes| ExtractBracket[Extract between [ and ]]
     CheckBracket -->|No| CheckPort{Contains ':' and<br/>last ':' looks like port?}
-    CheckPort -->|Yes| StripPort[Remove port after last ':'] 
+    CheckPort -->|Yes| StripPort[Remove port after last ':']
     CheckPort -->|No| AsIs[Use as-is]
     ExtractBracket --> Validate
     StripPort --> Validate

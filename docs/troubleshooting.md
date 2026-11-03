@@ -16,7 +16,7 @@ This document describes common issues, diagnostics, and solutions for NuciAPI.Mi
 app.Use(async (context, next) =>
 {
     var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("Headers: {Headers}", 
+    logger.LogInformation("Headers: {Headers}",
         context.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
     await next();
 });
@@ -126,7 +126,7 @@ public async Task<List<string>> GetClientHostnameAsync(HttpContext context, Time
 {
     var ip = GetClientIpAddress(context);
     if (string.IsNullOrEmpty(ip)) return [];
-    
+
     using var cts = new CancellationTokenSource(timeout);
     try
     {
@@ -189,18 +189,18 @@ builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Debug);
 app.Use(async (context, next) =>
 {
     var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-    
+
     logger.LogInformation("=== REQUEST START ===");
     logger.LogInformation("Method: {Method}", context.Request.Method);
     logger.LogInformation("Path: {Path}", context.Request.Path);
-    logger.LogInformation("Headers: {Headers}", 
+    logger.LogInformation("Headers: {Headers}",
         string.Join(", ", context.Request.Headers.Select(h => $"{h.Key}={h.Value}")));
     logger.LogInformation("Remote IP: {RemoteIp}", context.Connection.RemoteIpAddress);
     logger.LogInformation("Forwarded For: {ForwardedFor}", context.Request.Headers["X-Forwarded-For"]);
     logger.LogInformation("Forwarded: {Forwarded}", context.Request.Headers["Forwarded"]);
-    
+
     await next();
-    
+
     logger.LogInformation("=== RESPONSE: {StatusCode} ===", context.Response.StatusCode);
 });
 ```

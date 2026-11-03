@@ -40,7 +40,7 @@ public abstract class NuciApiMiddleware
 {
     // Set once in constructor, never modified
     protected RequestDelegate Next { get; }
-    
+
     // No other instance fields
     // All helpers are stateless (static or use only parameters)
 }
@@ -77,11 +77,11 @@ public sealed class SafeMiddleware(RequestDelegate next) : NuciApiMiddleware(nex
 
 // ✅ SAFE: Injected services are typically scoped/singleton with internal sync
 public sealed class ServiceMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IRateLimiter rateLimiter) : NuciApiMiddleware(next)
 {
     private readonly IRateLimiter _rateLimiter = rateLimiter;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
@@ -98,7 +98,7 @@ public sealed class ServiceMiddleware(
 public sealed class UnsafeMiddleware(RequestDelegate next) : NuciApiMiddleware(next)
 {
     private int _requestCount = 0; // SHARED across all requests!
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         _requestCount++; // Race condition!
@@ -110,7 +110,7 @@ public sealed class UnsafeMiddleware(RequestDelegate next) : NuciApiMiddleware(n
 public sealed class AlsoUnsafe(RequestDelegate next) : NuciApiMiddleware(next)
 {
     private string _lastClientId; // Overwritten by concurrent requests
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         _lastClientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
@@ -129,12 +129,12 @@ public sealed class CorrectMiddleware(RequestDelegate next) : NuciApiMiddleware(
     public override async Task InvokeAsync(HttpContext context)
     {
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-        
+
         // Store in request-scoped dictionary
         context.Items["ClientId"] = clientId;
-        
+
         await Next(context);
-        
+
         // Retrieve from same request's Items
         var stored = context.Items["ClientId"] as string;
     }
@@ -154,11 +154,11 @@ public sealed class RequestContext : IRequestContext
 // Register: builder.Services.AddScoped<IRequestContext, RequestContext>();
 
 public sealed class ScopedMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IRequestContext requestContext) : NuciApiMiddleware(next)
 {
     private readonly IRequestContext _requestContext = requestContext;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         _requestContext.ClientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
@@ -180,7 +180,7 @@ public override async Task InvokeAsync(HttpContext context)
 {
     // Runs on request thread, no SynchronizationContext to capture
     await Next(context); // Resumes on thread pool thread
-    
+
     // After await: no UI context, ConfigureAwait(false) is default behavior
 }
 ```
@@ -192,7 +192,7 @@ public override async Task InvokeAsync(HttpContext context)
 {
     // HttpContext.RequestAborted fires when client disconnects
     var cancellationToken = context.RequestAborted;
-    
+
     try
     {
         await Next(context);
@@ -213,20 +213,20 @@ public override async Task InvokeAsync(HttpContext context)
 public override async Task InvokeAsync(HttpContext context)
 {
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-    
+
     // Parallel independent operations
     var validationTask = _validator.ValidateAsync(clientId, context.Request);
     var rateLimitTask = _rateLimiter.CheckAsync(clientId);
     var auditTask = _auditLogger.LogRequestAsync(clientId, context.Request);
-    
+
     await Task.WhenAll(validationTask, rateLimitTask, auditTask);
-    
+
     if (!validationTask.Result)
     {
         context.Response.StatusCode = 401;
         return;
     }
-    
+
     await Next(context);
 }
 ```
@@ -235,11 +235,11 @@ public override async Task InvokeAsync(HttpContext context)
 
 ```csharp
 public sealed class LimitedConcurrencyMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IOptions<ConcurrencyOptions> options) : NuciApiMiddleware(next)
 {
     private readonly SemaphoreSlim _semaphore = new(options.Value.MaxConcurrent);
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         await _semaphore.WaitAsync(context.RequestAborted);
@@ -294,7 +294,7 @@ public override async Task InvokeAsync(HttpContext context)
         await context.Response.WriteAsJsonAsync(new { jobId, statusUrl = $"/api/jobs/{jobId}" });
         return;
     }
-    
+
     await Next(context);
 }
 ```
@@ -320,13 +320,13 @@ public override async Task InvokeAsync(HttpContext context)
     // ✅ GOOD: Single header read, no LINQ
     var headers = context.Request.Headers;
     string clientId = headers[NuciApiHeaderNames.ClientId].FirstOrDefault();
-    
+
     // ❌ AVOID: Multiple allocations
     // var clientId = context.Request.Headers
     //     .Where(h => h.Key == NuciApiHeaderNames.ClientId)
     //     .Select(h => h.Value.FirstOrDefault())
     //     .FirstOrDefault();
-    
+
     await Next(context);
 }
 ```
@@ -342,11 +342,11 @@ public async Task Given_ConcurrentRequests_When_InvokeAsync_Then_NoSharedStateCo
     var contexts = Enumerable.Range(0, 100)
         .Select(i => CreateContext($"client-{i}"))
         .ToArray();
-    
+
     // Act: Run all concurrently
     var tasks = contexts.Select(c => middleware.InvokeAsync(c));
     await Task.WhenAll(tasks);
-    
+
     // Assert: Each context processed independently
     foreach (var context in contexts)
     {

@@ -50,7 +50,7 @@ builder.Services.AddSingleton<IHmacValidator, MyHmacValidator>();
 builder.Services.AddScoped<IAuditLogger, MyAuditLogger>();
 
 // Middleware receives via constructor
-public sealed class MyNuciApiMiddleware(RequestDelegate next, IHmacValidator hmac) 
+public sealed class MyNuciApiMiddleware(RequestDelegate next, IHmacValidator hmac)
     : NuciApiMiddleware(next)
 {
     private readonly IHmacValidator _hmac = hmac;
@@ -110,7 +110,7 @@ builder.Services.Configure<MyMiddlewareOptions>(builder.Configuration.GetSection
 
 // Middleware consumes via IOptions
 public sealed class MyNuciApiMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IOptions<MyMiddlewareOptions> options) : NuciApiMiddleware(next)
 {
     private readonly MyMiddlewareOptions _options = options.Value;

@@ -11,7 +11,7 @@ public abstract class NuciApiMiddleware
 {
     // Only field - set once, immutable
     protected RequestDelegate Next { get; }
-    
+
     // No other fields
     // No persistence, no caching, no background state
 }
@@ -34,13 +34,13 @@ The standard ASP.NET Core pattern for request-scoped state:
 public override async Task InvokeAsync(HttpContext context)
 {
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-    
+
     // Store for downstream middleware/controllers
     context.Items["ClientId"] = clientId;
     context.Items["RequestStartTime"] = DateTimeOffset.UtcNow;
-    
+
     await Next(context);
-    
+
     // Access in later middleware or controllers
     var startTime = (DateTimeOffset)context.Items["RequestStartTime"];
     var duration = DateTimeOffset.UtcNow - startTime;
@@ -62,9 +62,9 @@ public static class MiddlewareContextKeys
 public static class HttpContextExtensions
 {
     public static string GetClientId(this HttpContext context)
-        => context.Items.TryGetValue(MiddlewareContextKeys.ClientId, out var value) 
+        => context.Items.TryGetValue(MiddlewareContextKeys.ClientId, out var value)
             ? value as string : null;
-    
+
     public static void SetClientId(this HttpContext context, string clientId)
         => context.Items[MiddlewareContextKeys.ClientId] = clientId;
 }
@@ -99,18 +99,18 @@ builder.Services.AddScoped<IRequestContext, RequestContext>();
 
 // Usage in middleware
 public sealed class MyMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IRequestContext requestContext) : NuciApiMiddleware(next)
 {
     private readonly IRequestContext _requestContext = requestContext;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         _requestContext.ClientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-        _requestContext.RequestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId) 
+        _requestContext.RequestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId)
             ?? Guid.NewGuid().ToString("N");
         _requestContext.ClientIp = GetClientIpAddress(context);
-        
+
         await Next(context);
     }
 }
@@ -152,28 +152,28 @@ public interface IRateLimiter
 public sealed class RedisRateLimiter : IRateLimiter
 {
     private readonly IDatabase _db;
-    
+
     public RedisRateLimiter(IConnectionMultiplexer redis)
     {
         _db = redis.GetDatabase();
     }
-    
+
     public async Task<bool> TryAcquireAsync(string clientId, int limit, TimeSpan window)
     {
         var key = $"ratelimit:{clientId}";
         var count = await _db.StringIncrementAsync(key);
-        
+
         if (count == 1)
         {
             await _db.KeyExpireAsync(key, window);
         }
-        
+
         return count <= limit;
     }
 }
 
 // Registration
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]));
 builder.Services.AddScoped<IRateLimiter, RedisRateLimiter>();
 ```
@@ -199,12 +199,12 @@ public interface IClientRegistry
 public sealed class EfClientRegistry : IClientRegistry
 {
     private readonly AppDbContext _db;
-    
+
     public EfClientRegistry(AppDbContext db) => _db = db;
-    
+
     public async Task<Client?> GetAsync(string clientId)
         => await _db.Clients.FindAsync(clientId);
-    
+
     public async Task<bool> IsActiveAsync(string clientId)
         => await _db.Clients.AnyAsync(c => c.Id == clientId && c.IsActive);
 }
@@ -222,28 +222,28 @@ Each call re-reads and re-computes. If consumers need caching, they implement it
 
 ```csharp
 public sealed class CachingMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IMemoryCache cache) : NuciApiMiddleware(next)
 {
     private readonly IMemoryCache _cache = cache;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-        
+
         // Cache client validation result for 5 minutes
         var isValid = await _cache.GetOrCreateAsync($"client:{clientId}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return await _clientRegistry.IsActiveAsync(clientId);
         });
-        
+
         if (!isValid)
         {
             context.Response.StatusCode = 403;
             return;
         }
-        
+
         await Next(context);
     }
 }
@@ -257,15 +257,15 @@ public sealed class CachingMiddleware(
 
 ```csharp
 public sealed class HostnameCachingMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IMemoryCache cache) : NuciApiMiddleware(next)
 {
     private readonly IMemoryCache _cache = cache;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         string ip = GetClientIpAddress(context);
-        
+
         if (!string.IsNullOrEmpty(ip))
         {
             var hostnames = await _cache.GetOrCreateAsync($"rdns:{ip}", async entry =>
@@ -273,10 +273,10 @@ public sealed class HostnameCachingMiddleware(
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
                 return GetClientHostname(context); // Base method does DNS lookup
             });
-            
+
             context.Items["ClientHostnames"] = hostnames;
         }
-        
+
         await Next(context);
     }
 }
@@ -293,9 +293,9 @@ public async Task Given_Request_When_InvokeAsync_Then_StoresClientIdInItems()
     var middleware = new TestNuciApiMiddleware(_ => Task.CompletedTask);
     var context = new DefaultHttpContext();
     context.Request.Headers[NuciApiHeaderNames.ClientId] = "test-client";
-    
+
     await middleware.InvokeAsync(context);
-    
+
     Assert.That(context.Items["NuciApi.ClientId"], Is.EqualTo("test-client"));
 }
 ```
@@ -311,16 +311,16 @@ public async Task Given_ScopedContext_When_InvokeAsync_Then_PopulatesContext()
     services.AddScoped<IRequestContext, RequestContext>();
     services.AddScoped<TestNuciApiMiddleware>();
     var provider = services.BuildServiceProvider();
-    
+
     using var scope = provider.CreateScope();
     var middleware = scope.ServiceProvider.GetRequiredService<TestNuciApiMiddleware>();
     var context = new DefaultHttpContext();
     context.RequestServices = scope.ServiceProvider;
     context.Request.Headers[NuciApiHeaderNames.ClientId] = "test-client";
-    
+
     // Act
     await middleware.InvokeAsync(context);
-    
+
     // Assert
     var requestContext = scope.ServiceProvider.GetRequiredService<IRequestContext>();
     Assert.That(requestContext.ClientId, Is.EqualTo("test-client"));

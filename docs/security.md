@@ -38,7 +38,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
-    
+
     // Add ONLY trusted proxy IPs/ranges
     options.KnownProxies.Add(IPAddress.Parse("10.0.0.1")); // Load balancer
     options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("10.0.0.0"), 8)); // VPC range
@@ -63,18 +63,18 @@ app.UseHsts(); // HSTS header (production)
 Derived middleware typically implements HMAC validation:
 
 ```csharp
-public sealed class SecureMiddleware(RequestDelegate next, IHmacValidator validator) 
+public sealed class SecureMiddleware(RequestDelegate next, IHmacValidator validator)
     : NuciApiMiddleware(next)
 {
     private readonly IHmacValidator _validator = validator;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         // Required headers — throw 400 if missing
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
         string hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
         string timestamp = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
-        
+
         // Replay protection: reject old timestamps
         if (!DateTimeOffset.TryParse(timestamp, out var requestTime) ||
             Math.Abs((DateTimeOffset.UtcNow - requestTime).TotalMinutes) > 5)
@@ -83,14 +83,14 @@ public sealed class SecureMiddleware(RequestDelegate next, IHmacValidator valida
             await context.Response.WriteAsync("Invalid timestamp");
             return;
         }
-        
+
         // Validate HMAC
         if (!_validator.Validate(clientId, hmac, context.Request, timestamp))
         {
             context.Response.StatusCode = 401;
             return;
         }
-        
+
         await Next(context);
     }
 }
@@ -111,26 +111,26 @@ public interface IHmacValidator
 public sealed class HmacValidator : IHmacValidator
 {
     private readonly IClientSecretStore _secrets;
-    
+
     public bool Validate(string clientId, string hmac, HttpRequest request, string timestamp)
     {
         if (!_secrets.TryGetSecret(clientId, out var secret))
             return false; // Don't reveal if client exists
-        
+
         // Reconstruct canonical request
         var canonical = BuildCanonicalRequest(request, timestamp);
-        
+
         // Compute expected HMAC
         using var hmacAlg = new HMACSHA256(Convert.FromBase64String(secret));
         var expected = hmacAlg.ComputeHash(Encoding.UTF8.GetBytes(canonical));
         var expectedB64 = Convert.ToBase64String(expected);
-        
+
         // Constant-time comparison
         return CryptographicOperations.FixedTimeEquals(
             Encoding.UTF8.GetBytes(hmac),
             Encoding.UTF8.GetBytes(expectedB64));
     }
-    
+
     private string BuildCanonicalRequest(HttpRequest request, string timestamp)
     {
         // Method\nPath\nQueryString\nTimestamp\nBodyHash
@@ -148,7 +148,7 @@ public sealed class HmacValidator : IHmacValidator
 public override async Task InvokeAsync(HttpContext context)
 {
     string requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
-    
+
     // Sanitize before using in logs, headers, or storage
     if (requestId != null)
     {
@@ -162,7 +162,7 @@ public override async Task InvokeAsync(HttpContext context)
             context.Response.Headers["X-Request-ID"] = requestId; // Safe to echo
         }
     }
-    
+
     await Next(context);
 }
 ```

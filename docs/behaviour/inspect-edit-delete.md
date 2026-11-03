@@ -15,11 +15,11 @@ public override async Task InvokeAsync(HttpContext context)
     var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
     var timestamp = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
     var hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
-    
+
     // Log for debugging
-    _logger.LogDebug("Headers: ClientId={ClientId}, RequestId={RequestId}, Timestamp={Timestamp}", 
+    _logger.LogDebug("Headers: ClientId={ClientId}, RequestId={RequestId}, Timestamp={Timestamp}",
         clientId, requestId ?? "none", timestamp);
-    
+
     await Next(context);
 }
 ```
@@ -57,11 +57,11 @@ public sealed class CustomIpMiddleware(RequestDelegate next) : NuciApiMiddleware
             if (IPAddress.TryParse(customIp, out var parsed))
                 return parsed.ToString();
         }
-        
+
         // 2. Fall back to base implementation
         return base.GetClientIpAddress(context);
     }
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         var ip = GetClientIpAddress(context);
@@ -74,26 +74,26 @@ public sealed class CustomIpMiddleware(RequestDelegate next) : NuciApiMiddleware
 ### Override Hostname Resolution
 
 ```csharp
-public sealed class CachedHostnameMiddleware(RequestDelegate next, IDnsCache cache) 
+public sealed class CachedHostnameMiddleware(RequestDelegate next, IDnsCache cache)
     : NuciApiMiddleware(next)
 {
     private readonly IDnsCache _cache = cache;
-    
+
     protected override List<string> GetClientHostname(HttpContext context)
     {
         var ip = GetClientIpAddress(context);
         if (ip == null) return [];
-        
+
         // Check cache first
         if (_cache.TryGet(ip, out var cached))
             return cached;
-        
+
         // Resolve and cache
         var hostnames = base.GetClientHostname(context);
         _cache.Set(ip, hostnames, TimeSpan.FromMinutes(5));
         return hostnames;
     }
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         await Next(context);
@@ -110,14 +110,14 @@ public sealed class ValidatingMiddleware(RequestDelegate next) : NuciApiMiddlewa
     {
         // Custom validation before base processing
         var clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-        
+
         if (!IsValidClientIdFormat(clientId))
         {
             context.Response.StatusCode = 400;
             await context.Response.WriteAsync("Invalid ClientId format");
             return;
         }
-        
+
         // Custom timestamp validation
         var timestamp = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
         if (!IsTimestampFresh(timestamp, TimeSpan.FromMinutes(2))) // Stricter than default
@@ -126,13 +126,13 @@ public sealed class ValidatingMiddleware(RequestDelegate next) : NuciApiMiddlewa
             await context.Response.WriteAsync("Timestamp too old");
             return;
         }
-        
+
         await Next(context);
     }
-    
+
     private bool IsValidClientIdFormat(string clientId)
         => !string.IsNullOrWhiteSpace(clientId) && clientId.Length <= 64;
-    
+
     private bool IsTimestampFresh(string timestamp, TimeSpan maxAge)
     {
         if (!DateTimeOffset.TryParse(timestamp, out var requestTime))
@@ -149,17 +149,17 @@ public sealed class ResponseHeaderMiddleware(RequestDelegate next) : NuciApiMidd
 {
     public override async Task InvokeAsync(HttpContext context)
     {
-        var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId) 
+        var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId)
             ?? Guid.NewGuid().ToString("N");
-        
+
         // Add correlation ID to response
         context.Response.Headers["X-Request-ID"] = requestId;
         context.Response.Headers["X-Response-Time"] = "0"; // Will update after
-        
+
         var stopwatch = Stopwatch.StartNew();
         await Next(context);
         stopwatch.Stop();
-        
+
         context.Response.Headers["X-Response-Time"] = stopwatch.ElapsedMilliseconds.ToString();
     }
 }
@@ -184,11 +184,11 @@ builder.Services.Configure<MyMiddlewareOptions>(builder.Configuration.GetSection
 
 // Usage in middleware
 public sealed class ConfigurableMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     IOptions<MyMiddlewareOptions> options) : NuciApiMiddleware(next)
 {
     private readonly MyMiddlewareOptions _options = options.Value;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         if (_options.RequireHmac)
@@ -196,7 +196,7 @@ public sealed class ConfigurableMiddleware(
             var hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
             // Validate...
         }
-        
+
         // Use _options.TimestampTolerance, etc.
         await Next(context);
     }
@@ -215,10 +215,10 @@ public void Given_CustomHeader_When_GetClientIpAddress_Then_ReturnsCustomIp()
     var middleware = new TestCustomIpMiddleware(_ => Task.CompletedTask);
     var context = new DefaultHttpContext();
     context.Request.Headers["X-Custom-Client-IP"] = "203.0.113.50";
-    
+
     // Act
     var ip = middleware.GetClientIpAddress(context);
-    
+
     // Assert
     Assert.That(ip, Is.EqualTo("203.0.113.50"));
 }
@@ -230,10 +230,10 @@ public void Given_NoCustomHeader_When_GetClientIpAddress_Then_FallsBackToBase()
     var middleware = new TestCustomIpMiddleware(_ => Task.CompletedTask);
     var context = new DefaultHttpContext();
     context.Connection.RemoteIpAddress = IPAddress.Parse("198.51.100.10");
-    
+
     // Act
     var ip = middleware.GetClientIpAddress(context);
-    
+
     // Assert
     Assert.That(ip, Is.EqualTo("198.51.100.10"));
 }
@@ -248,22 +248,22 @@ public async Task Given_CustomMiddleware_When_Request_Then_CustomBehaviorExecute
     // Arrange
     var builder = new WebHostBuilder()
         .ConfigureServices(s => s.AddSingleton<IHmacValidator, TestValidator>())
-        .Configure(app => 
+        .Configure(app =>
         {
             app.UseForwardedHeaders();
             app.UseMiddleware<CustomIpMiddleware>();
             app.UseMiddleware<ValidatingMiddleware>();
             app.Run(ctx => ctx.Response.WriteAsync("OK"));
         });
-    
+
     var server = new TestServer(builder);
     var client = server.CreateClient();
     client.DefaultRequestHeaders.Add("X-Custom-Client-IP", "203.0.113.50");
     client.DefaultRequestHeaders.Add("X-Client-ID", "test-client");
-    
+
     // Act
     var response = await client.GetAsync("/");
-    
+
     // Assert
     Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 }

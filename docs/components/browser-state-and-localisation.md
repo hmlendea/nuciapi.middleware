@@ -51,15 +51,15 @@ NuciAPI.Middleware does not provide:
 Consumers handle localisation at their layer:
 
 ```csharp
-public sealed class LocalisedMiddleware(RequestDelegate next, IStringLocalizer<LocalisedMiddleware> localizer) 
+public sealed class LocalisedMiddleware(RequestDelegate next, IStringLocalizer<LocalisedMiddleware> localizer)
     : NuciApiMiddleware(next)
 {
     private readonly IStringLocalizer _localizer = localizer;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         var culture = context.Request.Headers["Accept-Language"].FirstOrDefault() ?? "en";
-        
+
         try
         {
             await Next(context);

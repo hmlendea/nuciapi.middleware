@@ -90,22 +90,22 @@ Each document should have:
 
 ```csharp
 // ✅ GOOD: Complete, compilable, uses real types
-public sealed class MyMiddleware(RequestDelegate next, IHmacValidator validator) 
+public sealed class MyMiddleware(RequestDelegate next, IHmacValidator validator)
     : NuciApiMiddleware(next)
 {
     private readonly IHmacValidator _validator = validator;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
         string hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
-        
+
         if (!_validator.Validate(clientId, hmac, context.Request))
         {
             context.Response.StatusCode = 401;
             return;
         }
-        
+
         await Next(context);
     }
 }

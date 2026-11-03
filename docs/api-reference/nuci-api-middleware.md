@@ -1,7 +1,7 @@
 # NuciApiMiddleware API Reference
 
-**Namespace:** `NuciAPI.Middleware`  
-**Assembly:** `NuciAPI.Middleware.dll`  
+**Namespace:** `NuciAPI.Middleware`
+**Assembly:** `NuciAPI.Middleware.dll`
 **Source:** `NuciApiMiddleware.cs`
 
 ---
@@ -12,11 +12,11 @@
 public abstract class NuciApiMiddleware
 {
     protected NuciApiMiddleware(RequestDelegate next);
-    
+
     protected RequestDelegate Next { get; }
-    
+
     public abstract Task InvokeAsync(HttpContext context);
-    
+
     protected string GetHeaderValue(HttpRequest request, string headerName);
     protected string TryGetHeaderValue(HttpRequest request, string headerName);
     protected string GetClientIpAddress(HttpContext context);
@@ -45,11 +45,11 @@ Initializes a new instance of the middleware base class.
 
 **Example:**
 ```csharp
-public sealed class MyMiddleware(RequestDelegate next, IMyService service) 
+public sealed class MyMiddleware(RequestDelegate next, IMyService service)
     : NuciApiMiddleware(next)
 {
     private readonly IMyService _service = service;
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         // Custom logic
@@ -97,17 +97,17 @@ public override async Task InvokeAsync(HttpContext context)
 {
     // 1. Pre-processing (read headers, validate, etc.)
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-    
+
     // 2. Business logic
     if (!await _validator.ValidateAsync(clientId, context.Request))
     {
         context.Response.StatusCode = 401;
         return; // Short-circuit
     }
-    
+
     // 3. Continue pipeline
     await Next(context);
-    
+
     // 4. Post-processing (optional)
     _logger.LogInformation("Request completed for {ClientId}", clientId);
 }
@@ -304,7 +304,7 @@ public override async Task InvokeAsync(HttpContext context)
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
     string hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
     string timestamp = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
-    
+
     // Validate...
     await Next(context);
 }
@@ -318,12 +318,12 @@ public override async Task InvokeAsync(HttpContext context)
     // These return null if missing - never throw
     string requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
     string customHeader = TryGetHeaderValue(context.Request, "X-Custom-Header");
-    
+
     if (requestId != null)
     {
         context.Response.Headers["X-Request-ID"] = requestId;
     }
-    
+
     await Next(context);
 }
 ```
@@ -334,14 +334,14 @@ public override async Task InvokeAsync(HttpContext context)
 public override async Task InvokeAsync(HttpContext context)
 {
     string clientIp = GetClientIpAddress(context);
-    
+
     // Use for rate limiting, geo-blocking, logging
     if (!_rateLimiter.TryAcquire(clientIp))
     {
         context.Response.StatusCode = 429;
         return;
     }
-    
+
     await Next(context);
 }
 ```
@@ -359,11 +359,11 @@ public sealed class CustomIpMiddleware(RequestDelegate next) : NuciApiMiddleware
             if (IPAddress.TryParse(customIp, out var parsed))
                 return parsed.ToString();
         }
-        
+
         // Fall back to base implementation
         return base.GetClientIpAddress(context);
     }
-    
+
     public override async Task InvokeAsync(HttpContext context)
     {
         string ip = GetClientIpAddress(context); // Uses overridden version

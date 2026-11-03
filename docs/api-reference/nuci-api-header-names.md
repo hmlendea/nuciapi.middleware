@@ -1,7 +1,7 @@
 # NuciApiHeaderNames API Reference
 
-**Namespace:** `NuciAPI.Middleware`  
-**Assembly:** `NuciAPI.Middleware.dll`  
+**Namespace:** `NuciAPI.Middleware`
+**Assembly:** `NuciAPI.Middleware.dll`
 **Source:** `NuciApiHeaderNames.cs`
 
 ---
@@ -70,7 +70,7 @@ if (requestId != null)
 
 **Generation:** If not provided by client, middleware can generate:
 ```csharp
-var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId) 
+var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId)
     ?? Guid.NewGuid().ToString("N");
 ```
 
@@ -158,7 +158,7 @@ public override async Task InvokeAsync(HttpContext context)
     string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
     string hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
     string timestamp = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
-    
+
     // Validate...
     await Next(context);
 }
@@ -171,13 +171,13 @@ public override async Task InvokeAsync(HttpContext context)
 {
     // All return null if missing - never throw
     string requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
-    
+
     // Use for correlation
     if (requestId != null)
     {
         context.Items["CorrelationId"] = requestId;
     }
-    
+
     await Next(context);
 }
 ```
@@ -234,19 +234,19 @@ public class NuciApiHeaderNamesTests
     {
         Assert.That(NuciApiHeaderNames.ClientId, Is.EqualTo("X-Client-ID"));
     }
-    
+
     [Test]
     public void RequestId_IsExpectedValue()
     {
         Assert.That(NuciApiHeaderNames.RequestId, Is.EqualTo("X-Request-ID"));
     }
-    
+
     [Test]
     public void Timestamp_IsExpectedValue()
     {
         Assert.That(NuciApiHeaderNames.Timestamp, Is.EqualTo("X-Timestamp"));
     }
-    
+
     [Test]
     public void HmacToken_IsExpectedValue()
     {

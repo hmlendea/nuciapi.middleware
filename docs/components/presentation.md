@@ -116,18 +116,18 @@ public sealed class MyMiddleware(RequestDelegate next) : NuciApiMiddleware(next)
     {
         // Required header - throws if missing
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
-        
+
         // Optional header - returns null if missing
         string requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
-        
+
         // Client IP from forwarding headers or connection
         string clientIp = GetClientIpAddress(context);
-        
+
         // Optional hostname resolution
         List<string> hostnames = GetClientHostname(context);
-        
+
         // Custom logic here...
-        
+
         await Next(context); // Continue pipeline
     }
 }

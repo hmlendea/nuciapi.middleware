@@ -30,16 +30,16 @@ public sealed class AuthMiddleware(RequestDelegate next) : NuciApiMiddleware(nex
         string clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
         string hmac = GetHeaderValue(context.Request, NuciApiHeaderNames.HmacToken);
         string timestamp = GetHeaderValue(context.Request, NuciApiHeaderNames.Timestamp);
-        
+
         // TODO: Validate HMAC, timestamp, client existence
-        
+
         // Optional: Read correlation ID
         string requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
         if (requestId != null)
         {
             context.Response.Headers["X-Request-ID"] = requestId;
         }
-        
+
         // Continue pipeline
         await Next(context);
     }
@@ -155,10 +155,10 @@ public sealed class AuthMiddleware(RequestDelegate next) : NuciApiMiddleware(nex
         // Just demonstrate header reading
         var clientId = GetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
         var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
-        
+
         context.Response.Headers["X-Client-ID-Echo"] = clientId;
         if (requestId != null) context.Response.Headers["X-Request-ID"] = requestId;
-        
+
         await Next(context);
     }
 }

@@ -17,7 +17,7 @@ This design keeps the library lightweight and avoids imposing logging frameworks
 
 ```csharp
 public sealed class MyNuciApiMiddleware(
-    RequestDelegate next, 
+    RequestDelegate next,
     ILogger<MyNuciApiMiddleware> logger) : NuciApiMiddleware(next)
 {
     private readonly ILogger<MyNuciApiMiddleware> _logger = logger;
@@ -31,7 +31,7 @@ public override async Task InvokeAsync(HttpContext context)
 {
     var clientId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.ClientId);
     var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId);
-    
+
     using var scope = _logger.BeginScope(new Dictionary<string, object>
     {
         ["ClientId"] = clientId ?? "unknown",
@@ -39,9 +39,9 @@ public override async Task InvokeAsync(HttpContext context)
         ["Path"] = context.Request.Path.Value ?? "/",
         ["Method"] = context.Request.Method
     });
-    
+
     _logger.LogInformation("Middleware invoked");
-    
+
     try
     {
         await Next(context);
@@ -94,13 +94,13 @@ Use `X-Request-ID` header or generate one:
 ```csharp
 public override async Task InvokeAsync(HttpContext context)
 {
-    var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId) 
+    var requestId = TryGetHeaderValue(context.Request, NuciApiHeaderNames.RequestId)
         ?? Guid.NewGuid().ToString("N");
-    
+
     context.Response.Headers["X-Request-ID"] = requestId;
-    
+
     using var scope = _logger.BeginScope(new { RequestId = requestId });
-    
+
     _logger.LogInformation("Processing request");
     await Next(context);
 }
@@ -205,7 +205,7 @@ _logger.LogInformation("Request {Path} {Method}", context.Request.Path, context.
 _logger.LogInformation("Request {Path} {Method}", context.Request.Path.Value, context.Request.Method);
 
 // ✅ GOOD - use LoggerMessage delegate (zero allocation)
-private static readonly Action<ILogger, string, string, Exception?> _requestLog = 
+private static readonly Action<ILogger, string, string, Exception?> _requestLog =
     LoggerMessage.Define<string, string>(
         LogLevel.Information,
         new EventId(1, "RequestReceived"),
@@ -239,13 +239,13 @@ public async Task Given_ValidRequest_When_InvokeAsync_Then_LogsInformation()
     var middleware = new MyNuciApiMiddleware(_ => Task.CompletedTask, logger);
     var context = new DefaultHttpContext();
     context.Request.Headers[NuciApiHeaderNames.ClientId] = "client-1";
-    
+
     // Act
     await middleware.InvokeAsync(context);
-    
+
     // Assert
     var logs = TestLoggerProvider.GetLogs();
-    Assert.That(logs, Has.Some.Matches<LogEntry>(e => 
+    Assert.That(logs, Has.Some.Matches<LogEntry>(e =>
         e.Level == LogLevel.Information && e.Message.Contains("Middleware invoked")));
 }
 ```
