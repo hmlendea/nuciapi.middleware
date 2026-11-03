@@ -127,6 +127,12 @@ Please:
 - [NuciAPI.Middleware.Logging](https://github.com/hmlendea/nuciapi.logging)
 - [NuciAPI.Middleware.Security](https://github.com/hmlendea/nuciapi.security)
 
+## 🛡️ Privacy and Data
+
+NuciAPI.Middleware is a NuGet library providing ASP.NET Core middleware base utilities; it does not operate as a service and does not collect, process, or transmit personal data on its own. Applications that reference this library control all data handling.
+
+For the detailed description of how the library handles privacy and personal data, see [PRIVACY.md](./PRIVACY.md).
+
 ## License
 
 Licensed under the GNU General Public License v3.0 or later.
