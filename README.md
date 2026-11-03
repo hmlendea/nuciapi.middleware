@@ -143,6 +143,10 @@ For information on reporting security vulnerabilities, see [SECURITY.md](./SECUR
 
 See the [contributing guidelines](./CONTRIBUTING.md) for details on how to report issues, suggest enhancements, and submit changes.
 
+## 📜 Code of Conduct
+
+See the [Code of Conduct](./CODE_OF_CONDUCT.md) for the standards of conduct expected in all project spaces.
+
 ## License
 
 Licensed under the GNU General Public License v3.0 or later.
