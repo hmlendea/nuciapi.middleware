@@ -1,3 +1,6 @@
-using System.Runtime.CompilerServices;
-
-[assembly: InternalsVisibleTo("NuciAPI.Middleware.UnitTests")]
+namespace NuciAPI.Middleware
+{
+    internal static class AssemblyInfo
+    {
+    }
+}
