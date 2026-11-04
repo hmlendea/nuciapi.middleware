@@ -92,9 +92,12 @@ namespace NuciAPI.Middleware
         {
             clientIpAddress = null;
 
-            IEnumerable<string> ipCandidates = headerName == "Forwarded"
-                ? GetForwardedHeaderIpCandidates(headerValue)
-                : headerValue.Split(',').Select(x => x.Trim());
+            IEnumerable<string> ipCandidates = headerValue.Split(',').Select(x => x.Trim());
+
+            if (string.Equals(headerName, "Forwarded", StringComparison.OrdinalIgnoreCase))
+            {
+                ipCandidates = GetForwardedHeaderIpCandidates(headerValue);
+            }
 
             foreach (string ipCandidate in ipCandidates)
             {
