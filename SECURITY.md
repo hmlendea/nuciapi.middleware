@@ -8,6 +8,7 @@ This document describes the security policy for NuciAPI.Middleware, a NuGet libr
 - [Reporting a Vulnerability](#-reporting-a-vulnerability)
 - [Scope](#-scope)
 - [Disclosure Policy](#-disclosure-policy)
+- [Automated Security Scanning](#-automated-security-scanning)
 - [Safe Harbour](#-safe-harbour)
 - [Recognition](#-recognition)
 
@@ -51,6 +52,14 @@ This project follows coordinated disclosure:
 2. A remediation plan is prepared and validated.
 3. Public disclosure is published after a fix, mitigation, or agreed risk decision is available.
 4. Credit is attributed in accordance with reporter preference and project policy.
+
+## 🔍 Automated Security Scanning
+
+This repository runs automated security scans on every push, pull request, and weekly schedule. The scan includes:
+- **Vulnerable package detection** Checks all direct and transitive NuGet dependencies for known vulnerabilities using `dotnet list package --vulnerable --include-transitive`
+- **CodeQL static analysis** Performs semantic code analysis for C# to detect security anti-patterns, injection flaws, and other code-level vulnerabilities
+
+Results are published to the [Security](https://github.com/hmlendea/nuciapi.middleware/security) tab and the [Actions](https://github.com/hmlendea/nuciapi.middleware/actions/workflows/security.yml) workflow page.
 
 ## 🧾 Safe Harbour
 
