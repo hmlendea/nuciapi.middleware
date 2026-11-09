@@ -144,6 +144,7 @@ This script downloads and executes an external release helper from `https://raw.
 | Workflow | Purpose | What it does |
 |----------|---------|--------------|
 | [ Build Status ](https://github.com/hmlendea/nuciapi.middleware/blob/master/.github/workflows/dotnet.yml) | Continuous integration | Builds and tests the solution on push and pull request |
+| [ Security Scan ](https://github.com/hmlendea/nuciapi.middleware/blob/master/.github/workflows/security.yml) | Security scanning | Scans for vulnerable packages and runs CodeQL analysis on push, pull request, and weekly schedule |
 | [ GitHub Release ](https://github.com/hmlendea/nuciapi.middleware/blob/master/.github/workflows/github-release.yml) | GitHub Release publication | Creates GitHub Releases when release tags are pushed |
 | [ NuGet.org Release ](https://github.com/hmlendea/nuciapi.middleware/blob/master/.github/workflows/nuget-release.yml) | NuGet package publication | Publishes NuGet packages to NuGet.org on release |
 
